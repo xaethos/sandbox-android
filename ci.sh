@@ -1,10 +1,16 @@
 if [ -n "$JENKINS_HOME" ]
 then
-  echo "This Jenkins build $BUILD_NUMBER!"
+  echo "This is Jenkins build $BUILD_NUMBER!"
   echo "Branch: $GIT_BRANCH"
-  BRANCH_TYPE=`echo $GIT_BRANCH | sed -e 's#[^/]*/\([^/]*\).*#\1#'`
-  echo "Type: $BRANCH_TYPE"
+  IFS=/ read -r GIT_REMOTE BUILD_TYPE BUILD_TOPIC <<<"$GIT_BRANCH"
 else
   echo "No Jenkins here. Move along..."
+  BUILD_TYPE=develop
+  WORKSPACE=`git rev-parse --show-toplevel`
 fi
 
+echo "Type: $BUILD_TYPE"
+test -n "$BUILD_TOPIC" && echo "Topic: $BUILD_TOPIC"
+
+cd $WORKSPACE
+./gradlew assembleDebug
