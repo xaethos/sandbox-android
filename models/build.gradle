@@ -1,0 +1,9 @@
+apply plugin: 'com.google.protobuf'
+
+protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+
+dependencies {
+//    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
+//    compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-2'
+}

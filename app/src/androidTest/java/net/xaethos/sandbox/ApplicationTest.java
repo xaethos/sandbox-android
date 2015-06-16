@@ -1,4 +1,4 @@
-package ner.xaethos.sandbox;
+package net.xaethos.sandbox;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

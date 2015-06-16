@@ -1,10 +1,10 @@
-package ner.xaethos.sandbox;
+package net.xaethos.sandbox;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import net.xaethos.sandbox.models.Person;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -13,6 +13,8 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
+
+    Person p;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
