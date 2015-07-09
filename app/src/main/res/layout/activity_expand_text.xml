@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="net.xaethos.sandbox.expand.ExpandTextActivity">
+
+    <FrameLayout android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView android:id="@android:id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec convallis id dolor non pulvinar. Vestibulum nec eleifend magna, vitae dictum risus. Fusce tempus metus et ipsum aliquam tincidunt. Nulla vulputate dui nec nisi tincidunt, at auctor elit aliquam. Ut viverra ac dolor ultricies commodo. Nam quis turpis sit amet neque cursus sodales vitae sit amet erat. Aenean ornare dignissim turpis sit amet scelerisque. Duis sit amet condimentum mauris. Cras elementum tincidunt dapibus. Donec semper est odio, sit amet volutpat nunc efficitur sed. Phasellus eu semper felis, eu accumsan turpis. Praesent venenatis vestibulum dolor vel ornare. Nulla tincidunt tempus pretium. Curabitur sodales viverra dolor, ut congue tortor luctus at." />
+
+    </FrameLayout>
+
+    <Button android:id="@android:id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="toggle"
+        android:text="Toggle" />
+
+</LinearLayout>

@@ -1,20 +1,26 @@
 package net.xaethos.sandbox;
 
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import net.xaethos.sandbox.models.Person;
+import android.view.View;
 
-public class MainActivity extends ActionBarActivity {
+import net.xaethos.sandbox.expand.ExpandTextActivity;
+import net.xaethos.sandbox.singletonloader.SingletonLoaderActivity;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-    }
 
-    Person p;
+        findViewById(R.id.btn_loaderadapter).setOnClickListener(this);
+        findViewById(R.id.btn_singleton_loader).setOnClickListener(this);
+        findViewById(R.id.btn_expand_text).setOnClickListener(this);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -36,5 +42,20 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_loaderadapter:
+                startActivity(new Intent(this, LoaderAdapterActivity.class));
+                break;
+            case R.id.btn_expand_text:
+                startActivity(new Intent(this, ExpandTextActivity.class));
+                break;
+            case R.id.btn_singleton_loader:
+                startActivity(new Intent(this, SingletonLoaderActivity.class));
+                break;
+        }
     }
 }

@@ -8,13 +8,33 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="net.xaethos.sandbox.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".LoaderAdapterActivity"
+            android:label="@string/title_activity_loader_adapter"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.xaethos.sandbox.MainActivity" />
+        </activity>
+        <activity
+            android:name=".expand.ExpandTextActivity"
+            android:label="@string/title_activity_expand_text" >
+        </activity>
+        <activity
+            android:name=".singletonloader.SingletonLoaderActivity"
+            android:label="@string/title_activity_singleton_loader"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.xaethos.sandbox.MainActivity" />
         </activity>
     </application>
 
