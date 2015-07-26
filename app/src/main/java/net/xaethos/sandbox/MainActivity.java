@@ -1,64 +1,61 @@
 package net.xaethos.sandbox;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceScreen;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
-import java.util.ArrayList;
-import java.util.List;
+import net.xaethos.sandbox.expand.ExpandTextFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
+
+    DrawerLayout mDrawerLayout;
+    Toolbar mToolbar;
+    NavigationView mNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new ActivitiesPreferenceFragment())
-                .commit();
+        setContentView(R.layout.activity_main);
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mToolbar.setNavigationIcon(R.drawable.ic_menu_black_24dp);
+        setSupportActionBar(mToolbar);
+
+        mNavigationView = (NavigationView) findViewById(R.id.navigation);
+        mNavigationView.setNavigationItemSelectedListener(this);
     }
 
-    public static List<Preference> getChildIntentPreferences(Context context) {
-        ArrayList<Preference> preferences = new ArrayList<>();
+    @Override
+    public boolean onNavigationItemSelected(MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+        case R.id.nav_expand_text:
+            mToolbar.setTitle(menuItem.getTitle());
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.navigation_content, new ExpandTextFragment())
+                    .commit();
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+            return true;
 
-        PackageManager packageManager = context.getPackageManager();
-        Intent packageIntent = new Intent(Intent.ACTION_MAIN);
-        packageIntent.addCategory("net.xaethos.sandbox.LAUNCHER");
-
-        List<ResolveInfo> resolution = packageManager.queryIntentActivities(packageIntent, 0);
-        for (ResolveInfo info : resolution) {
-            Intent childIntent = new Intent();
-            childIntent.setClassName(context, info.activityInfo.name);
-
-            Preference preference = new Preference(context);
-            preference.setTitle(info.activityInfo.labelRes);
-            preference.setIntent(childIntent);
-            preferences.add(preference);
         }
-
-        return preferences;
+        return false;
     }
 
-    /**
-     * This fragment shows general preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    public static class ActivitiesPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(getActivity());
-            setPreferenceScreen(screen);
-            for (Preference preference : getChildIntentPreferences(getActivity())) {
-                screen.addPreference(preference);
-            }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            mDrawerLayout.openDrawer(GravityCompat.START);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
         }
     }
 

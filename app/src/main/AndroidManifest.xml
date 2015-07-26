@@ -10,7 +10,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_main">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -20,32 +20,6 @@
             android:name=".LoaderAdapterActivity"
             android:exported="false"
             android:label="@string/title_activity_loader_adapter"
-            android:parentActivityName=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="net.xaethos.sandbox.LAUNCHER" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="net.xaethos.sandbox.MainActivity" />
-        </activity>
-        <activity
-            android:name=".expand.ExpandTextActivity"
-            android:exported="false"
-            android:label="@string/title_activity_expand_text"
-            android:parentActivityName=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="net.xaethos.sandbox.LAUNCHER" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="net.xaethos.sandbox.MainActivity" />
-        </activity>
-        <activity
-            android:name=".singletonloader.SingletonLoaderActivity"
-            android:exported="false"
-            android:label="@string/title_activity_singleton_loader"
             android:parentActivityName=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
