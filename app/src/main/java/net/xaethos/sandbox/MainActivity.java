@@ -1,61 +1,65 @@
 package net.xaethos.sandbox;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.PreferenceFragment;
+import android.preference.PreferenceScreen;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 
-import net.xaethos.sandbox.expand.ExpandTextActivity;
-import net.xaethos.sandbox.singletonloader.SingletonLoaderActivity;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        findViewById(R.id.btn_loaderadapter).setOnClickListener(this);
-        findViewById(R.id.btn_singleton_loader).setOnClickListener(this);
-        findViewById(R.id.btn_expand_text).setOnClickListener(this);
+        getFragmentManager().beginTransaction()
+                .replace(android.R.id.content, new ActivitiesPreferenceFragment())
+                .commit();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    public static List<Preference> getChildIntentPreferences(Context context) {
+        ArrayList<Preference> preferences = new ArrayList<>();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        PackageManager packageManager = context.getPackageManager();
+        Intent packageIntent = new Intent(Intent.ACTION_MAIN);
+        packageIntent.addCategory("net.xaethos.sandbox.LAUNCHER");
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        List<ResolveInfo> resolution = packageManager.queryIntentActivities(packageIntent, 0);
+        for (ResolveInfo info : resolution) {
+            Intent childIntent = new Intent();
+            childIntent.setClassName(context, info.activityInfo.name);
+
+            Preference preference = new Preference(context);
+            preference.setTitle(info.activityInfo.labelRes);
+            preference.setIntent(childIntent);
+            preferences.add(preference);
         }
 
-        return super.onOptionsItemSelected(item);
+        return preferences;
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_loaderadapter:
-                startActivity(new Intent(this, LoaderAdapterActivity.class));
-                break;
-            case R.id.btn_expand_text:
-                startActivity(new Intent(this, ExpandTextActivity.class));
-                break;
-            case R.id.btn_singleton_loader:
-                startActivity(new Intent(this, SingletonLoaderActivity.class));
-                break;
+    /**
+     * This fragment shows general preferences only. It is used when the
+     * activity is showing a two-pane settings UI.
+     */
+    public static class ActivitiesPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(getActivity());
+            setPreferenceScreen(screen);
+            for (Preference preference : getChildIntentPreferences(getActivity())) {
+                screen.addPreference(preference);
+            }
         }
     }
+
 }

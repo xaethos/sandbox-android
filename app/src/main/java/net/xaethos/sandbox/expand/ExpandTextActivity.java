@@ -1,7 +1,7 @@
 package net.xaethos.sandbox.expand;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 
 import net.xaethos.sandbox.R;
 
-public class ExpandTextActivity extends Activity {
+public class ExpandTextActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
