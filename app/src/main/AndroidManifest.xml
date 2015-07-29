@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="net.xaethos.sandbox"
+<manifest package="net.xaethos.sandbox"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
@@ -13,8 +12,17 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".ComplexLayoutActivity"
+            android:label="@string/sandbox_complex_layout"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.xaethos.sandbox.MainActivity" />
         </activity>
     </application>
 

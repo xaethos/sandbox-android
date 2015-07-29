@@ -11,6 +11,9 @@
         <item
             android:id="@+id/nav_loader_adapter"
             android:title="@string/sandbox_loader_adapter" />
+        <item
+            android:id="@+id/nav_complex_layout"
+            android:title="@string/sandbox_complex_layout" />
     </group>
 
 </menu>
