@@ -16,19 +16,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".LoaderAdapterActivity"
-            android:exported="false"
-            android:label="@string/title_activity_loader_adapter"
-            android:parentActivityName=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="net.xaethos.sandbox.LAUNCHER" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="net.xaethos.sandbox.MainActivity" />
-        </activity>
     </application>
 
 </manifest>

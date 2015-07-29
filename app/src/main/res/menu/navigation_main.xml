@@ -7,7 +7,10 @@
         <item
             android:id="@+id/nav_expand_text"
             android:checked="true"
-            android:title="@string/title_activity_expand_text" />
+            android:title="@string/sandbox_expand_text" />
+        <item
+            android:id="@+id/nav_loader_adapter"
+            android:title="@string/sandbox_loader_adapter" />
     </group>
 
 </menu>

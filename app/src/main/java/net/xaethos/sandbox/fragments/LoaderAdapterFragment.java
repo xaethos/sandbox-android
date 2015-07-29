@@ -1,36 +1,37 @@
-package net.xaethos.sandbox;
+package net.xaethos.sandbox.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import net.xaethos.sandbox.R;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+public class LoaderAdapterFragment extends Fragment {
 
-public class LoaderAdapterActivity extends AppCompatActivity {
-
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_loader_adapter);
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_loader_adapter, container, false);
 
-        final LoaderAdapter adapter = new LoaderAdapter(this, getSupportLoaderManager());
+        LoaderAdapter adapter = new LoaderAdapter(getActivity(), getLoaderManager());
 
-        View emptyView = findViewById(android.R.id.empty);
+        View emptyView = view.findViewById(android.R.id.empty);
         emptyView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -38,31 +39,11 @@ public class LoaderAdapterActivity extends AppCompatActivity {
             }
         });
 
-        ListView listView = (ListView) findViewById(android.R.id.list);
+        ListView listView = (ListView) view.findViewById(android.R.id.list);
         listView.setEmptyView(emptyView);
         listView.setAdapter(adapter);
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_loader_adapter, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return view;
     }
 
     static class Item {
@@ -219,7 +200,8 @@ public class LoaderAdapterActivity extends AppCompatActivity {
         }
     }
 
-    private static class LoaderAdapter extends BaseAdapter implements LoaderManager.LoaderCallbacks<ItemPage> {
+    private static class LoaderAdapter extends BaseAdapter
+            implements LoaderManager.LoaderCallbacks<ItemPage> {
 
         private final Context mContext;
         private final ItemLoader mLoader;
@@ -260,7 +242,8 @@ public class LoaderAdapterActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = LayoutInflater.from(mContext).inflate(android.R.layout.simple_list_item_1, parent, false);
+                convertView = LayoutInflater.from(mContext)
+                        .inflate(android.R.layout.simple_list_item_1, parent, false);
             }
             long itemId = getItemId(position);
             String text;

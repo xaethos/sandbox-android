@@ -2,13 +2,16 @@ package net.xaethos.sandbox;
 
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import net.xaethos.sandbox.expand.ExpandTextFragment;
+import net.xaethos.sandbox.fragments.ExpandTextFragment;
+import net.xaethos.sandbox.fragments.LoaderAdapterFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -31,19 +34,22 @@ public class MainActivity extends AppCompatActivity
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
         mNavigationView.setNavigationItemSelectedListener(this);
+
+        FragmentManager manager = getSupportFragmentManager();
+        if (manager.findFragmentById(R.id.navigation_content) == null) {
+            mToolbar.setTitle(R.string.sandbox_expand_text);
+            manager.beginTransaction()
+                    .add(R.id.navigation_content, new ExpandTextFragment())
+                    .commit();
+        }
     }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
         case R.id.nav_expand_text:
-            mToolbar.setTitle(menuItem.getTitle());
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.navigation_content, new ExpandTextFragment())
-                    .commit();
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-
+        case R.id.nav_loader_adapter:
+            return navigateToFragment(menuItem);
         }
         return false;
     }
@@ -57,6 +63,31 @@ public class MainActivity extends AppCompatActivity
         default:
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    private boolean navigateToFragment(MenuItem menuItem) {
+        Fragment fragment;
+
+        switch (menuItem.getItemId()) {
+        case R.id.nav_expand_text:
+            fragment = new ExpandTextFragment();
+            break;
+
+        case R.id.nav_loader_adapter:
+            fragment = new LoaderAdapterFragment();
+            break;
+
+        default:
+            return false;
+        }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.navigation_content, fragment)
+                .commit();
+
+        menuItem.setChecked(true);
+        mToolbar.setTitle(menuItem.getTitle());
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
     }
 
 }

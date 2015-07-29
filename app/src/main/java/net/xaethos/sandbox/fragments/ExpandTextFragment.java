@@ -1,4 +1,4 @@
-package net.xaethos.sandbox.expand;
+package net.xaethos.sandbox.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -21,7 +21,7 @@ public class ExpandTextFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_expand_text, container, false);
+        View view = inflater.inflate(R.layout.fragment_expand_text, container, false);
 
         mExpandableContent = view.findViewById(R.id.content);
         mExpandTextView = view.findViewById(android.R.id.text1);
