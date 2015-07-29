@@ -18,7 +18,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 @MediumTest
@@ -221,11 +221,22 @@ public class FutureListenerQueueTest extends AndroidTestCase {
     }
 
     private static Matcher<TestListener> wasFailure(Throwable error) {
-        return TestListener.matches(null, is(error));
+        return TestListener.matches(null, equalTo(error));
     }
 
-    private static Matcher<TestListener> wasFailure(Class<? extends Throwable> errorType) {
-        return TestListener.matches(null, (Matcher<Throwable>) instanceOf(errorType));
+    private static Matcher<TestListener> wasFailure(final Class<? extends Throwable> errorType) {
+        Matcher<Throwable> instanceOf = new TypeSafeMatcher<Throwable>() {
+            @Override
+            public boolean matchesSafely(Throwable throwable) {
+                return errorType.isInstance(throwable);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("instance of").appendText(errorType.getName());
+            }
+        };
+        return TestListener.matches(null, instanceOf);
     }
 
     private static class TestListener implements ListenableFuture.Listener<Object> {
