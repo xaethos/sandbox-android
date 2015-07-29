@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        mToolbar.setNavigationIcon(R.drawable.ic_menu_black_24dp);
+        mToolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
         setSupportActionBar(mToolbar);
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation);
