@@ -1,16 +1,21 @@
 package net.xaethos.sandbox;
 
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.Locale;
 
@@ -26,6 +31,9 @@ public class ComplexLayoutActivity extends AppCompatActivity {
      */
     SectionsPagerAdapter mSectionsPagerAdapter;
 
+    CollapsingToolbarLayout mCollapsingToolbarLayout;
+    Toolbar mAppBar;
+    RecyclerView mRecyclerView;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -36,14 +44,55 @@ public class ComplexLayoutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complex_layout);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mCollapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_bar);
+        mCollapsingToolbarLayout.setTitle(getTitle());
 
-        // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
+        mAppBar = (Toolbar) findViewById(R.id.action_bar);
+        mAppBar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+        setSupportActionBar(mAppBar);
 
+        mRecyclerView = (RecyclerView) findViewById(R.id.list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setAdapter(new Adapter());
+
+//        // Create the adapter that will return a fragment for each of the three
+//        // primary sections of the activity.
+//        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+//
+//        // Set up the ViewPager with the sections adapter.
+//        mViewPager = (ViewPager) findViewById(R.id.pager);
+//        mViewPager.setAdapter(mSectionsPagerAdapter);
+
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        public final TextView textView;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            textView = (TextView) itemView.findViewById(android.R.id.text1);
+        }
+    }
+
+    class Adapter extends RecyclerView.Adapter<ViewHolder> {
+        final LayoutInflater mInflater = LayoutInflater.from(ComplexLayoutActivity.this);
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            return new ViewHolder(mInflater.inflate(android.R.layout.simple_list_item_1,
+                    parent,
+                    false));
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.textView.setText("item " + position);
+        }
+
+        @Override
+        public int getItemCount() {
+            return 30;
+        }
     }
 
     @Override
@@ -81,8 +130,8 @@ public class ComplexLayoutActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            // Return a ScrollingFragment (defined as a static inner class below).
+            return ScrollingFragment.newInstance(position + 1);
         }
 
         @Override
@@ -106,10 +155,7 @@ public class ComplexLayoutActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
+    public static class ScrollingFragment extends Fragment {
         /**
          * The fragment argument representing the section number for this
          * fragment.
@@ -120,21 +166,20 @@ public class ComplexLayoutActivity extends AppCompatActivity {
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+        public static ScrollingFragment newInstance(int sectionNumber) {
+            ScrollingFragment fragment = new ScrollingFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
             return fragment;
         }
 
-        public PlaceholderFragment() {
-        }
-
         @Override
         public View onCreateView(
                 LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_complex_layout, container, false);
+            ((TextView) rootView.findViewById(R.id.section_label)).setText(
+                    "Section " + getArguments().getInt(ARG_SECTION_NUMBER));
             return rootView;
         }
     }
