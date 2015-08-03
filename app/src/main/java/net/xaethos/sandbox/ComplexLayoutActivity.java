@@ -1,7 +1,10 @@
 package net.xaethos.sandbox;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -21,78 +24,27 @@ import java.util.Locale;
 
 public class ComplexLayoutActivity extends AppCompatActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    SectionsPagerAdapter mSectionsPagerAdapter;
-
-    CollapsingToolbarLayout mCollapsingToolbarLayout;
-    Toolbar mAppBar;
-    RecyclerView mRecyclerView;
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    ViewPager mViewPager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complex_layout);
 
-        mCollapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_bar);
-        mCollapsingToolbarLayout.setTitle(getTitle());
+        CollapsingToolbarLayout collapsingBar =
+                (CollapsingToolbarLayout) findViewById(R.id.collapsing_bar);
+        collapsingBar.setTitle(getTitle());
 
-        mAppBar = (Toolbar) findViewById(R.id.action_bar);
-        mAppBar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-        setSupportActionBar(mAppBar);
+        Toolbar actionBar = (Toolbar) findViewById(R.id.action_bar);
+        actionBar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+        setSupportActionBar(actionBar);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.list);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.setAdapter(new Adapter());
+        SectionsPagerAdapter pagerAdapter =
+                new SectionsPagerAdapter(this, getSupportFragmentManager());
 
-//        // Create the adapter that will return a fragment for each of the three
-//        // primary sections of the activity.
-//        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-//
-//        // Set up the ViewPager with the sections adapter.
-//        mViewPager = (ViewPager) findViewById(R.id.pager);
-//        mViewPager.setAdapter(mSectionsPagerAdapter);
+        ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        viewPager.setAdapter(pagerAdapter);
 
-    }
-
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        public final TextView textView;
-
-        public ViewHolder(View itemView) {
-            super(itemView);
-            textView = (TextView) itemView.findViewById(android.R.id.text1);
-        }
-    }
-
-    class Adapter extends RecyclerView.Adapter<ViewHolder> {
-        final LayoutInflater mInflater = LayoutInflater.from(ComplexLayoutActivity.this);
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return new ViewHolder(mInflater.inflate(android.R.layout.simple_list_item_1,
-                    parent,
-                    false));
-        }
-
-        @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.textView.setText("item " + position);
-        }
-
-        @Override
-        public int getItemCount() {
-            return 30;
-        }
+        TabLayout tabBar = (TabLayout) findViewById(R.id.tab_bar);
+        tabBar.setupWithViewPager(viewPager);
     }
 
     @Override
@@ -117,14 +69,13 @@ public class ComplexLayoutActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+    static class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        final Resources mResources;
+
+        public SectionsPagerAdapter(Context context, FragmentManager fm) {
             super(fm);
+            mResources = context.getResources();
         }
 
         @Override
@@ -145,11 +96,11 @@ public class ComplexLayoutActivity extends AppCompatActivity {
             Locale l = Locale.getDefault();
             switch (position) {
             case 0:
-                return getString(R.string.title_section1).toUpperCase(l);
+                return mResources.getString(R.string.title_section1).toUpperCase(l);
             case 1:
-                return getString(R.string.title_section2).toUpperCase(l);
+                return mResources.getString(R.string.title_section2).toUpperCase(l);
             case 2:
-                return getString(R.string.title_section3).toUpperCase(l);
+                return mResources.getString(R.string.title_section3).toUpperCase(l);
             }
             return null;
         }
@@ -177,10 +128,50 @@ public class ComplexLayoutActivity extends AppCompatActivity {
         @Override
         public View onCreateView(
                 LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_complex_layout, container, false);
-            ((TextView) rootView.findViewById(R.id.section_label)).setText(
-                    "Section " + getArguments().getInt(ARG_SECTION_NUMBER));
-            return rootView;
+            Context context = container.getContext();
+
+            RecyclerView recyclerView = new RecyclerView(context);
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            recyclerView.setAdapter(new ListAdapter(inflater,
+                    getArguments().getInt(ARG_SECTION_NUMBER)));
+
+            return recyclerView;
+        }
+    }
+
+    static class ListAdapter extends RecyclerView.Adapter<ViewHolder> {
+        final LayoutInflater mInflater;
+        final int mSectionNumber;
+
+        ListAdapter(LayoutInflater inflater, int sectionNumber) {
+            mInflater = inflater;
+            mSectionNumber = sectionNumber;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            return new ViewHolder(mInflater.inflate(android.R.layout.simple_list_item_1,
+                    parent,
+                    false));
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.textView.setText(String.format("item %d.%d", mSectionNumber, position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return 30;
+        }
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        public final TextView textView;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            textView = (TextView) itemView.findViewById(android.R.id.text1);
         }
     }
 

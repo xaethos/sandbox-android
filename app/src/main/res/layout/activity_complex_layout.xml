@@ -5,14 +5,8 @@
     android:layout_height="match_parent"
     tools:context="net.xaethos.sandbox.ComplexLayoutActivity">
 
-    <!--<android.support.v4.view.ViewPager-->
-    <!--android:id="@+id/pager"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent" />-->
-
-    <!-- Your Scrollable View -->
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/list"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
@@ -20,13 +14,13 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:minHeight="?attr/actionBarSize">
+        android:layout_height="wrap_content">
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:id="@+id/collapsing_bar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="240dp"
+            android:minHeight="?attr/actionBarSize"
             app:contentScrim="?attr/colorPrimary"
             app:expandedTitleMarginEnd="64dp"
             app:expandedTitleMarginStart="48dp"
@@ -35,7 +29,6 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:minHeight="100dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/fennec"
                 app:layout_collapseMode="parallax"
@@ -49,10 +42,11 @@
 
         </android.support.design.widget.CollapsingToolbarLayout>
 
-        <!--<android.support.design.widget.TabLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--app:layout_scrollFlags="scroll|enterAlways" />-->
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab_bar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways" />
 
     </android.support.design.widget.AppBarLayout>
 
