@@ -1,5 +1,6 @@
 package net.xaethos.sandbox;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -50,6 +51,10 @@ public class MainActivity extends AppCompatActivity
         case R.id.nav_expand_text:
         case R.id.nav_loader_adapter:
             return navigateToFragment(menuItem);
+        case R.id.nav_complex_layout:
+            startActivity(new Intent(this, ComplexLayoutActivity.class));
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+            return true;
         }
         return false;
     }
