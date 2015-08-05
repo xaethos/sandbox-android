@@ -1,7 +1,9 @@
 package net.xaethos.sandbox;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.TabLayout;
@@ -22,7 +24,7 @@ import android.widget.TextView;
 
 import java.util.Locale;
 
-public class ComplexLayoutActivity extends AppCompatActivity {
+public class ComplexLayoutActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,23 @@ public class ComplexLayoutActivity extends AppCompatActivity {
 
         TabLayout tabBar = (TabLayout) findViewById(R.id.tab_bar);
         tabBar.setupWithViewPager(viewPager);
+
+        findViewById(R.id.img_fennec).setOnClickListener(this);
+        findViewById(R.id.text_fennec_copyright).setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+        case R.id.img_fennec:
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://www.flickr.com/photos/abeams/3663189616/")));
+            break;
+        case R.id.text_fennec_copyright:
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://creativecommons.org/licenses/by-nc/2.0/")));
+            break;
+        }
     }
 
     @Override
