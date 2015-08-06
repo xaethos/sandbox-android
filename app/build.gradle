@@ -12,14 +12,24 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     packagingOptions {
         exclude 'LICENSE.txt'
+    }
+
+    jacoco {
+        version = "0.7.4.201502262128"
     }
 
     //protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
