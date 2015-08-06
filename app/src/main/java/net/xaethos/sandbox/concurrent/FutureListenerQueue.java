@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.xaethos.sandbox.futures;
+package net.xaethos.sandbox.concurrent;
 
 import android.os.Handler;
 import android.util.Pair;

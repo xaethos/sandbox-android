@@ -1,4 +1,4 @@
-package net.xaethos.sandbox.futures;
+package net.xaethos.sandbox.concurrent;
 
 import android.os.Handler;
 import android.support.annotation.NonNull;

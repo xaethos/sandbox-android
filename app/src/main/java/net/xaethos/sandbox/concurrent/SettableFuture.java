@@ -1,6 +1,7 @@
-package net.xaethos.sandbox.futures;
+package net.xaethos.sandbox.concurrent;
 
 import android.os.Handler;
+import android.support.annotation.NonNull;
 
 import java.util.concurrent.FutureTask;
 
@@ -13,7 +14,7 @@ public class SettableFuture<V> extends FutureTask<V> implements ListenableFuture
         }
     };
 
-    private final FutureListenerQueue mListenerQueue = new FutureListenerQueue();
+    private final FutureListenerQueue<V> mListenerQueue = new FutureListenerQueue<>();
 
     public SettableFuture() {
         super(NOOP, null);
@@ -25,13 +26,18 @@ public class SettableFuture<V> extends FutureTask<V> implements ListenableFuture
     }
 
     @Override
-    protected void setException(Throwable t) {
+    public void setException(Throwable t) {
         super.setException(t);
     }
 
     @Override
-    public void addListener(Listener listener, Handler handler) {
+    public void addListener(@NonNull Listener<V> listener, Handler handler) {
         mListenerQueue.add(this, listener, handler);
     }
 
+    @Override
+    protected void done() {
+        mListenerQueue.dispatchResolved(this);
+        super.done();
+    }
 }
