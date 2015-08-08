@@ -7,6 +7,7 @@
     <string name="sandbox_loader_adapter">LoaderAdapter</string>
     <string name="sandbox_expand_text">Expandable TextView</string>
     <string name="sandbox_complex_layout">Complex Layout</string>
+    <string name="sandbox_rxjava">RxJava</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
@@ -14,4 +15,7 @@
     <string name="lipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec convallis id dolor non pulvinar. Vestibulum nec eleifend magna, vitae dictum risus. Fusce tempus metus et ipsum aliquam tincidunt. Nulla vulputate dui nec nisi tincidunt, at auctor elit aliquam. Ut viverra ac dolor ultricies commodo. Nam quis turpis sit amet neque cursus sodales vitae sit amet erat. Aenean ornare dignissim turpis sit amet scelerisque. Duis sit amet condimentum mauris. Cras elementum tincidunt dapibus. Donec semper est odio, sit amet volutpat nunc efficitur sed. Phasellus eu semper felis, eu accumsan turpis. Praesent venenatis vestibulum dolor vel ornare. Nulla tincidunt tempus pretium. Curabitur sodales viverra dolor, ut congue tortor luctus at.</string>
 
     <string name="fennec_copyright">Ⓒ Amelia Beamish</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

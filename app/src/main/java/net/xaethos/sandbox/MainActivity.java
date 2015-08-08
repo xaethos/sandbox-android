@@ -13,6 +13,7 @@ import android.view.MenuItem;
 
 import net.xaethos.sandbox.fragments.ExpandTextFragment;
 import net.xaethos.sandbox.fragments.LoaderAdapterFragment;
+import net.xaethos.sandbox.fragments.RxJavaFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity
         switch (menuItem.getItemId()) {
         case R.id.nav_expand_text:
         case R.id.nav_loader_adapter:
+        case R.id.nav_rxjava:
             return navigateToFragment(menuItem);
         case R.id.nav_complex_layout:
             startActivity(new Intent(this, ComplexLayoutActivity.class));
@@ -80,6 +82,10 @@ public class MainActivity extends AppCompatActivity
 
         case R.id.nav_loader_adapter:
             fragment = new LoaderAdapterFragment();
+            break;
+
+        case R.id.nav_rxjava:
+            fragment = new RxJavaFragment();
             break;
 
         default:
