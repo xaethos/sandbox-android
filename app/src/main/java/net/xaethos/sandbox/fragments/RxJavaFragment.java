@@ -20,6 +20,12 @@ import net.xaethos.sandbox.R;
 
 import java.util.concurrent.TimeUnit;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+
 public class RxJavaFragment extends Fragment {
 
     private final GoogleApiClient.ConnectionCallbacks mConnectionListener;
@@ -48,7 +54,39 @@ public class RxJavaFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_rx_java, container, false);
         mCoordView = (TextView) root.findViewById(R.id.coordinates);
+
+        final TextView timeView = (TextView) root.findViewById(R.id.time);
+        Integer[] digits = new Integer[20];
+        for (int i = 0; i < digits.length; ++i) digits[i] = i;
+        counterObservable().subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer value) {
+                        timeView.setText("Count " + value);
+                    }
+                });
+
         return root;
+    }
+
+    private Observable<Integer> counterObservable() {
+        return Observable.create(new Observable.OnSubscribe<Integer>() {
+            private int mCounter;
+
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                while (true) {
+                    if (subscriber.isUnsubscribed()) return;
+                    subscriber.onNext(mCounter++);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        if (!subscriber.isUnsubscribed()) subscriber.onError(e);
+                    }
+                }
+            }
+        });
     }
 
     @Override
