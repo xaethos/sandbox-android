@@ -1,8 +1,10 @@
 package net.xaethos.sandbox.fragments;
 
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +19,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.xaethos.sandbox.R;
@@ -43,6 +47,10 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
     SupportMapFragment mMapFragment;
     TextView mCoordinatesView;
     TextView mCounterView;
+
+    protected static LatLng getLatLng(@NonNull Location location) {
+        return new LatLng(location.getLatitude(), location.getLongitude());
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,31 +183,56 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
             @Override
             public void onMapReady(final GoogleMap googleMap) {
                 googleMap.getUiSettings().setAllGesturesEnabled(false);
-
-                subscriptions.add(mLocationStream.getLocationObservable()
-                        .filter(new Func1<Location, Boolean>() {
-                            @Override
-                            public Boolean call(Location location) {
-                                return location != null;
-                            }
-                        })
-                        .map(new Func1<Location, CameraUpdate>() {
-                            @Override
-                            public CameraUpdate call(Location location) {
-                                return CameraUpdateFactory.newLatLngZoom(new LatLng(location
-                                        .getLatitude(),
-                                        location.getLongitude()), 15f);
-                            }
-                        })
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<CameraUpdate>() {
-                            @Override
-                            public void call(CameraUpdate update) {
-                                googleMap.animateCamera(update);
-                            }
-                        }));
+                subscribeMapCircle(subscriptions, googleMap);
+                subscribeMapCamera(subscriptions, googleMap);
             }
         });
+    }
+
+    private void subscribeMapCircle(
+            final CompositeSubscription subscriptions, final GoogleMap googleMap) {
+        final Circle circle = googleMap.addCircle(new CircleOptions().center(new LatLng(0, 0))
+                .radius(10)
+                .strokeColor(Color.DKGRAY)
+                .visible(false));
+
+        subscriptions.add(mLocationStream.getLocationObservable()
+                .subscribe(new Action1<Location>() {
+                    @Override
+                    public void call(Location location) {
+                        if (location == null) {
+                            circle.setVisible(false);
+                        } else {
+                            circle.setCenter(getLatLng(location));
+                            circle.setRadius(location.getAccuracy());
+                            circle.setVisible(true);
+                        }
+                    }
+                }));
+    }
+
+    private void subscribeMapCamera(
+            final CompositeSubscription subscriptions, final GoogleMap googleMap) {
+        subscriptions.add(mLocationStream.getLocationObservable()
+                .filter(new Func1<Location, Boolean>() {
+                    @Override
+                    public Boolean call(Location location) {
+                        return location != null;
+                    }
+                })
+                .map(new Func1<Location, CameraUpdate>() {
+                    @Override
+                    public CameraUpdate call(Location location) {
+                        return CameraUpdateFactory.newLatLngZoom(getLatLng(location), 15f);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<CameraUpdate>() {
+                    @Override
+                    public void call(CameraUpdate update) {
+                        googleMap.animateCamera(update);
+                    }
+                }));
     }
 
 }
