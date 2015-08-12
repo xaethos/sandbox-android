@@ -39,23 +39,17 @@ public class MainActivity extends AppCompatActivity
 
         FragmentManager manager = getSupportFragmentManager();
         if (manager.findFragmentById(R.id.navigation_content) == null) {
-            mToolbar.setTitle(R.string.sandbox_expand_text);
-            manager.beginTransaction()
-                    .add(R.id.navigation_content, new ExpandTextFragment())
-                    .commit();
+            mDrawerLayout.openDrawer(mNavigationView);
         }
     }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
+        if (menuItem.getGroupId() == R.id.group_fragments) return navigateToFragment(menuItem);
+
         switch (menuItem.getItemId()) {
-        case R.id.nav_expand_text:
-        case R.id.nav_loader_adapter:
-        case R.id.nav_rxjava:
-            return navigateToFragment(menuItem);
         case R.id.nav_complex_layout:
             startActivity(new Intent(this, ComplexLayoutActivity.class));
-            mDrawerLayout.closeDrawer(GravityCompat.START);
             return true;
         }
         return false;
@@ -74,20 +68,16 @@ public class MainActivity extends AppCompatActivity
 
     private boolean navigateToFragment(MenuItem menuItem) {
         Fragment fragment;
-
         switch (menuItem.getItemId()) {
         case R.id.nav_expand_text:
             fragment = new ExpandTextFragment();
             break;
-
         case R.id.nav_loader_adapter:
             fragment = new LoaderAdapterFragment();
             break;
-
         case R.id.nav_rxjava:
             fragment = new RxJavaFragment();
             break;
-
         default:
             return false;
         }

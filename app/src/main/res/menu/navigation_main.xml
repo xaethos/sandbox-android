@@ -3,20 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
 
-    <group android:checkableBehavior="single">
+    <group
+        android:id="@+id/group_fragments"
+        android:checkableBehavior="single">
         <item
             android:id="@+id/nav_expand_text"
-            android:checked="true"
             android:title="@string/sandbox_expand_text" />
         <item
             android:id="@+id/nav_loader_adapter"
             android:title="@string/sandbox_loader_adapter" />
         <item
-            android:id="@+id/nav_complex_layout"
-            android:title="@string/sandbox_complex_layout" />
-        <item
             android:id="@+id/nav_rxjava"
             android:title="@string/sandbox_rxjava" />
     </group>
+
+    <item
+        android:id="@+id/nav_complex_layout"
+        android:title="@string/sandbox_complex_layout" />
 
 </menu>
