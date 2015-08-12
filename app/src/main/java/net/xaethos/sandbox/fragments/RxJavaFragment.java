@@ -12,6 +12,12 @@ import android.widget.TextView;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 
 import net.xaethos.sandbox.R;
 import net.xaethos.sandbox.observables.LocationStream;
@@ -22,6 +28,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
@@ -34,8 +41,8 @@ public class RxJavaFragment extends Fragment {
     LocationStream mLocationStream;
 
     CompositeSubscription mSubscriptions;
-    Action1<Location> mCoordinateObserver;
-    Action1<Integer> mCounterObserver;
+    Action1<Location> mCoordinateSubscriber;
+    Action1<Integer> mCounterSubscriber;
 
     public RxJavaFragment() {
         mConnectionListener = new ConnectionCallback();
@@ -57,7 +64,7 @@ public class RxJavaFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_rx_java, container, false);
 
         final TextView coordView = (TextView) root.findViewById(R.id.coordinates);
-        mCoordinateObserver = new Action1<Location>() {
+        mCoordinateSubscriber = new Action1<Location>() {
             @Override
             public void call(Location location) {
                 if (location == null) {
@@ -71,7 +78,7 @@ public class RxJavaFragment extends Fragment {
         };
 
         final TextView timeView = (TextView) root.findViewById(R.id.time);
-        mCounterObserver = new Action1<Integer>() {
+        mCounterSubscriber = new Action1<Integer>() {
             @Override
             public void call(Integer value) {
                 timeView.setText("Count " + value);
@@ -84,13 +91,47 @@ public class RxJavaFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mSubscriptions = new CompositeSubscription();
+        final CompositeSubscription subscriptions = new CompositeSubscription();
+        mSubscriptions = subscriptions;
+
         mSubscriptions.add(mLocationStream.getLocationObservable()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mCoordinateObserver));
+                .subscribe(mCoordinateSubscriber));
+
         mSubscriptions.add(newCounterObservable().subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mCounterObserver));
+                .subscribe(mCounterSubscriber));
+
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fragment_map);
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(final GoogleMap googleMap) {
+                subscriptions.add(mLocationStream.getLocationObservable()
+                        .filter(new Func1<Location, Boolean>() {
+                            @Override
+                            public Boolean call(Location location) {
+                                return location != null;
+                            }
+                        })
+                        .map(new Func1<Location, CameraUpdate>() {
+                            @Override
+                            public CameraUpdate call(Location location) {
+                                return CameraUpdateFactory.newLatLngZoom(new LatLng(location
+                                        .getLatitude(),
+                                        location.getLongitude()), 15f);
+                            }
+                        })
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Action1<CameraUpdate>() {
+                            @Override
+                            public void call(CameraUpdate update) {
+                                googleMap.getUiSettings().setAllGesturesEnabled(false);
+                                googleMap.animateCamera(update);
+                            }
+                        }));
+            }
+        });
 
         mApiClient.connect();
     }
@@ -99,14 +140,16 @@ public class RxJavaFragment extends Fragment {
     public void onPause() {
         super.onPause();
         mSubscriptions.unsubscribe();
+        mSubscriptions = null;
+
         mApiClient.disconnect();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mCoordinateObserver = null;
-        mCounterObserver = null;
+        mCoordinateSubscriber = null;
+        mCounterSubscriber = null;
     }
 
     private Observable<Integer> newCounterObservable() {
