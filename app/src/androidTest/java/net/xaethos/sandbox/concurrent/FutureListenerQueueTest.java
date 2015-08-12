@@ -55,13 +55,11 @@ public class FutureListenerQueueTest extends AndroidTestCase {
     public void testAdd_afterDispatch_postOnNextTick() throws Exception {
         final Object result = new Object();
         Future<Object> future = resolvedFuture(result);
-
         queue.dispatchResolved(future);
 
         queue.add(future, listener, handler);
-        assertThat(listener, notCalled());
-
         testThread.awaitHandling();
+
         assertThat(listener, wasSuccess(result));
     }
 
