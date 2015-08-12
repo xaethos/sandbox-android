@@ -15,6 +15,9 @@
         <item
             android:id="@+id/nav_rxjava"
             android:title="@string/sandbox_rxjava" />
+        <item
+            android:id="@+id/nav_pretty_form"
+            android:title="@string/sandbox_pretty_form" />
     </group>
 
     <item
