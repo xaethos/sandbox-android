@@ -13,26 +13,26 @@ public class SettableFutureTest extends AndroidTestCase {
 
     SettableFuture<Object> future;
     ListenableFuture.Listener<Object> listener;
-    AsyncTestThread mTestThread;
+    AsyncTestThread testThread;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mTestThread = AsyncTestThread.setUp();
+        testThread = AsyncTestThread.setUp();
         listener = mock(ListenableFuture.Listener.class);
         future = new SettableFuture<>();
     }
 
     @Override
     protected void tearDown() throws Exception {
-        mTestThread.tearDown();
+        testThread.tearDown();
         super.tearDown();
     }
 
     public void testSetAndGet() throws Exception {
         final Object value = new Object();
 
-        mTestThread.getHandler().post(new Runnable() {
+        testThread.getHandler().post(new Runnable() {
             @Override
             public void run() {
                 future.set(value);
@@ -44,10 +44,10 @@ public class SettableFutureTest extends AndroidTestCase {
 
     public void testSetWithListener() throws Exception {
         Object value = new Object();
-        future.addListener(listener, mTestThread.getHandler());
+        future.addListener(listener, testThread.getHandler());
 
         future.set(value);
-        mTestThread.awaitHandling();
+        testThread.awaitHandling();
 
         verify(listener, only()).onSuccess(value);
         verifyNoMoreInteractions(listener);
@@ -55,10 +55,10 @@ public class SettableFutureTest extends AndroidTestCase {
 
     public void testSetException() throws Exception {
         Throwable error = new Exception();
-        future.addListener(listener, mTestThread.getHandler());
+        future.addListener(listener, testThread.getHandler());
 
         future.setException(error);
-        mTestThread.awaitHandling();
+        testThread.awaitHandling();
 
         verify(listener, only()).onFailure(error);
         verifyNoMoreInteractions(listener);

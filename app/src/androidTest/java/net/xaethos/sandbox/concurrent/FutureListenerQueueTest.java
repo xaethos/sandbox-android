@@ -1,7 +1,6 @@
 package net.xaethos.sandbox.concurrent;
 
 import android.os.Handler;
-import android.os.Looper;
 import android.test.AndroidTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 
@@ -11,11 +10,8 @@ import org.hamcrest.TypeSafeMatcher;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -28,21 +24,21 @@ public class FutureListenerQueueTest extends AndroidTestCase {
     Handler handler;
     FutureListenerQueue<Object> queue;
 
-    TestLooper mTestLooper;
+    AsyncTestThread testThread;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mTestLooper = TestLooper.setUp();
+        testThread = AsyncTestThread.setUp();
 
         listener = new TestListener();
-        handler = new Handler(mTestLooper.getLooper());
+        handler = testThread.getHandler();
         queue = new FutureListenerQueue<>();
     }
 
     @Override
     protected void tearDown() throws Exception {
-        mTestLooper.tearDown();
+        testThread.tearDown();
         super.tearDown();
     }
 
@@ -52,7 +48,7 @@ public class FutureListenerQueueTest extends AndroidTestCase {
 
         queue.add(future, listener, handler);
 
-        waitForPost(handler);
+        testThread.awaitHandling();
         assertThat(listener, notCalled());
     }
 
@@ -65,7 +61,7 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         queue.add(future, listener, handler);
         assertThat(listener, notCalled());
 
-        waitForPost(handler);
+        testThread.awaitHandling();
         assertThat(listener, wasSuccess(result));
     }
 
@@ -96,7 +92,7 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         queue.add(future, anotherListener, handler);
         queue.dispatchResolved(future);
 
-        waitForPost(handler);
+        testThread.awaitHandling();
 
         for (TestListener l : new TestListener[]{listener, anotherListener}) {
             assertThat(l, wasSuccess(result));
@@ -132,7 +128,7 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         queue.add(future, listener, handler);
         queue.dispatchResolved(future);
 
-        waitForPost(handler);
+        testThread.awaitHandling();
         assertThat(listener, wasFailure(error));
     }
 
@@ -148,7 +144,7 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         queue.add(future, listener, handler);
         queue.dispatchResolved(future);
 
-        waitForPost(handler);
+        testThread.awaitHandling();
         assertThat(listener, wasFailure(CancellationException.class));
     }
 
@@ -161,55 +157,6 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         });
         future.run();
         return future;
-    }
-
-    private void waitForPost(Handler handler) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await(200, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            fail("Interrupted waiting for Handler post: " + e.getMessage());
-        }
-    }
-
-    private static class TestLooper implements Runnable {
-        public final CountDownLatch setUpLatch = new CountDownLatch(1);
-        private Looper mLooper;
-
-        private TestLooper() {
-        }
-
-        public Looper getLooper() {
-            return mLooper;
-        }
-
-        public static TestLooper setUp() {
-            TestLooper instance = new TestLooper();
-            Executors.newSingleThreadExecutor().execute(instance);
-            try {
-                instance.setUpLatch.await(200, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                fail("Couldn't set up test thread looper: " + e.getMessage());
-            }
-            return instance;
-        }
-
-        @Override
-        public void run() {
-            Looper.prepare();
-            mLooper = Looper.myLooper();
-            Looper.loop();
-        }
-
-        public void tearDown() {
-            mLooper.quit();
-        }
     }
 
     private static Matcher<TestListener> notCalled() {
@@ -244,18 +191,6 @@ public class FutureListenerQueueTest extends AndroidTestCase {
         public Throwable error = null;
         public int callCount = 0;
 
-        @Override
-        public synchronized void onSuccess(Object value) {
-            this.callCount++;
-            this.value = value;
-        }
-
-        @Override
-        public synchronized void onFailure(Throwable error) {
-            this.callCount++;
-            this.error = error;
-        }
-
         public static Matcher<TestListener> matches(
                 final Matcher<Object> valueMatcher, final Matcher<Throwable> errorMatcher) {
             return new TypeSafeMatcher<TestListener>() {
@@ -278,6 +213,18 @@ public class FutureListenerQueueTest extends AndroidTestCase {
                     description.appendText("listener with state");
                 }
             };
+        }
+
+        @Override
+        public synchronized void onSuccess(Object value) {
+            this.callCount++;
+            this.value = value;
+        }
+
+        @Override
+        public synchronized void onFailure(Throwable error) {
+            this.callCount++;
+            this.error = error;
         }
     }
 
