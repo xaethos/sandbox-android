@@ -50,7 +50,7 @@ public final class AsyncTestThread {
     }
 
     public void awaitHandling() {
-        awaitHandling(50, TimeUnit.MILLISECONDS);
+        awaitHandling(200, TimeUnit.MILLISECONDS);
     }
 
     public void awaitHandling(long timeout, TimeUnit unit) {
