@@ -20,7 +20,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.xaethos.sandbox.R;
-import net.xaethos.sandbox.observables.LocationStream;
+import net.xaethos.sandbox.rx.LocationStream;
+import net.xaethos.sandbox.rx.TextViewSetTextAction;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,28 +33,23 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
-public class RxJavaFragment extends Fragment {
-
-    private final GoogleApiClient.ConnectionCallbacks mConnectionListener;
+public class RxJavaFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks {
 
     GoogleApiClient mApiClient;
 
     LocationStream mLocationStream;
-
     CompositeSubscription mSubscriptions;
-    Action1<Location> mCoordinateSubscriber;
-    Action1<Integer> mCounterSubscriber;
 
-    public RxJavaFragment() {
-        mConnectionListener = new ConnectionCallback();
-    }
+    SupportMapFragment mMapFragment;
+    TextView mCoordinatesView;
+    TextView mCounterView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mApiClient = new GoogleApiClient.Builder(getActivity()).addApi(LocationServices.API)
-                .addConnectionCallbacks(mConnectionListener)
+                .addConnectionCallbacks(this)
                 .build();
         mLocationStream = new LocationStream(mApiClient);
     }
@@ -63,27 +59,10 @@ public class RxJavaFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_rx_java, container, false);
 
-        final TextView coordView = (TextView) root.findViewById(R.id.coordinates);
-        mCoordinateSubscriber = new Action1<Location>() {
-            @Override
-            public void call(Location location) {
-                if (location == null) {
-                    coordView.setText(R.string.ellipsis);
-                } else {
-                    coordView.setText(String.format("%.4f, %.4f",
-                            location.getLatitude(),
-                            location.getLongitude()));
-                }
-            }
-        };
-
-        final TextView timeView = (TextView) root.findViewById(R.id.time);
-        mCounterSubscriber = new Action1<Integer>() {
-            @Override
-            public void call(Integer value) {
-                timeView.setText("Count " + value);
-            }
-        };
+        mCoordinatesView = (TextView) root.findViewById(R.id.coordinates);
+        mCounterView = (TextView) root.findViewById(R.id.time);
+        mMapFragment =
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fragment_map);
 
         return root;
     }
@@ -91,65 +70,46 @@ public class RxJavaFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        final CompositeSubscription subscriptions = new CompositeSubscription();
-        mSubscriptions = subscriptions;
-
-        mSubscriptions.add(mLocationStream.getLocationObservable()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mCoordinateSubscriber));
-
-        mSubscriptions.add(newCounterObservable().subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mCounterSubscriber));
-
-        SupportMapFragment mapFragment =
-                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fragment_map);
-        mapFragment.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(final GoogleMap googleMap) {
-                subscriptions.add(mLocationStream.getLocationObservable()
-                        .filter(new Func1<Location, Boolean>() {
-                            @Override
-                            public Boolean call(Location location) {
-                                return location != null;
-                            }
-                        })
-                        .map(new Func1<Location, CameraUpdate>() {
-                            @Override
-                            public CameraUpdate call(Location location) {
-                                return CameraUpdateFactory.newLatLngZoom(new LatLng(location
-                                        .getLatitude(),
-                                        location.getLongitude()), 15f);
-                            }
-                        })
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<CameraUpdate>() {
-                            @Override
-                            public void call(CameraUpdate update) {
-                                googleMap.getUiSettings().setAllGesturesEnabled(false);
-                                googleMap.animateCamera(update);
-                            }
-                        }));
-            }
-        });
 
         mApiClient.connect();
+
+        mSubscriptions = new CompositeSubscription();
+        subscribeCounter(mSubscriptions, mCounterView);
+        subscribeCoordinates(mSubscriptions, mCoordinatesView);
+        subscribeMap(mSubscriptions, mMapFragment);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mSubscriptions.unsubscribe();
-        mSubscriptions = null;
-
         mApiClient.disconnect();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mCoordinateSubscriber = null;
-        mCounterSubscriber = null;
+        mMapFragment = null;
+        mCounterView = null;
+        mCoordinatesView = null;
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        LocationRequest request = new LocationRequest();
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setInterval(TimeUnit.SECONDS.toMillis(10));
+        request.setFastestInterval(TimeUnit.SECONDS.toMillis(5));
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(mApiClient,
+                request,
+                mLocationStream.getLocationCallback(),
+                Looper.getMainLooper());
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 
     private Observable<Integer> newCounterObservable() {
@@ -171,24 +131,75 @@ public class RxJavaFragment extends Fragment {
         });
     }
 
-    private class ConnectionCallback implements GoogleApiClient.ConnectionCallbacks {
-        @Override
-        public void onConnected(Bundle bundle) {
-            LocationRequest request = new LocationRequest();
-            request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            request.setInterval(TimeUnit.SECONDS.toMillis(10));
-            request.setFastestInterval(TimeUnit.SECONDS.toMillis(5));
+    private void subscribeCounter(
+            final CompositeSubscription subscriptions, final TextView counterView) {
+        if (subscriptions == null || counterView == null) return;
 
-            LocationServices.FusedLocationApi.requestLocationUpdates(mApiClient,
-                    request,
-                    mLocationStream.getLocationCallback(),
-                    Looper.getMainLooper());
-        }
+        subscriptions.add(newCounterObservable().map(new Func1<Integer, CharSequence>() {
+            @Override
+            public CharSequence call(Integer value) {
+                return "Count " + value;
+            }
+        })
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new TextViewSetTextAction(counterView)));
+    }
 
-        @Override
-        public void onConnectionSuspended(int i) {
+    private void subscribeCoordinates(
+            final CompositeSubscription subscriptions, final TextView coordView) {
+        if (subscriptions == null || coordView == null) return;
 
-        }
+        subscriptions.add(mLocationStream.getLocationObservable()
+                .map(new Func1<Location, CharSequence>() {
+                    @Override
+                    public CharSequence call(Location location) {
+                        if (location == null) {
+                            return getText(R.string.ellipsis);
+                        } else {
+                            return String.format("%.4f, %.4f",
+                                    location.getLatitude(),
+                                    location.getLongitude());
+                        }
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new TextViewSetTextAction(coordView)));
+    }
+
+    private void subscribeMap(
+            final CompositeSubscription subscriptions, final SupportMapFragment mapFragment) {
+        if (subscriptions == null || mapFragment == null) return;
+
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(final GoogleMap googleMap) {
+                googleMap.getUiSettings().setAllGesturesEnabled(false);
+
+                subscriptions.add(mLocationStream.getLocationObservable()
+                        .filter(new Func1<Location, Boolean>() {
+                            @Override
+                            public Boolean call(Location location) {
+                                return location != null;
+                            }
+                        })
+                        .map(new Func1<Location, CameraUpdate>() {
+                            @Override
+                            public CameraUpdate call(Location location) {
+                                return CameraUpdateFactory.newLatLngZoom(new LatLng(location
+                                        .getLatitude(),
+                                        location.getLongitude()), 15f);
+                            }
+                        })
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Action1<CameraUpdate>() {
+                            @Override
+                            public void call(CameraUpdate update) {
+                                googleMap.animateCamera(update);
+                            }
+                        }));
+            }
+        });
     }
 
 }

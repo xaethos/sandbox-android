@@ -1,4 +1,4 @@
-package net.xaethos.sandbox.observables;
+package net.xaethos.sandbox.rx;
 
 import android.location.Location;
 
