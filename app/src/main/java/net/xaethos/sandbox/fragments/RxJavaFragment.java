@@ -44,10 +44,6 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
     LocationStream mLocationStream;
     CompositeSubscription mSubscriptions;
 
-    SupportMapFragment mMapFragment;
-    TextView mCoordinatesView;
-    TextView mCounterView;
-
     protected static LatLng getLatLng(@NonNull Location location) {
         return new LatLng(location.getLatitude(), location.getLongitude());
     }
@@ -67,10 +63,12 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_rx_java, container, false);
 
-        mCoordinatesView = (TextView) root.findViewById(R.id.coordinates);
-        mCounterView = (TextView) root.findViewById(R.id.time);
-        mMapFragment =
-                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fragment_map);
+        mSubscriptions = new CompositeSubscription();
+
+        subscribeCounter(mSubscriptions, (TextView) root.findViewById(R.id.time));
+        subscribeCoordinates(mSubscriptions, (TextView) root.findViewById(R.id.coordinates));
+        subscribeMap(mSubscriptions,
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fragment_map));
 
         return root;
     }
@@ -80,26 +78,20 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
         super.onResume();
 
         mApiClient.connect();
-
-        mSubscriptions = new CompositeSubscription();
-        subscribeCounter(mSubscriptions, mCounterView);
-        subscribeCoordinates(mSubscriptions, mCoordinatesView);
-        subscribeMap(mSubscriptions, mMapFragment);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mSubscriptions.unsubscribe();
         mApiClient.disconnect();
     }
 
     @Override
     public void onDestroyView() {
+        mSubscriptions.unsubscribe();
+        mSubscriptions = null;
+
         super.onDestroyView();
-        mMapFragment = null;
-        mCounterView = null;
-        mCoordinatesView = null;
     }
 
     @Override
@@ -183,6 +175,8 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
             @Override
             public void onMapReady(final GoogleMap googleMap) {
                 googleMap.getUiSettings().setAllGesturesEnabled(false);
+                googleMap.moveCamera(CameraUpdateFactory.zoomTo(15f));
+
                 subscribeMapCircle(subscriptions, googleMap);
                 subscribeMapCamera(subscriptions, googleMap);
             }
@@ -223,7 +217,7 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
                 .map(new Func1<Location, CameraUpdate>() {
                     @Override
                     public CameraUpdate call(Location location) {
-                        return CameraUpdateFactory.newLatLngZoom(getLatLng(location), 15f);
+                        return CameraUpdateFactory.newLatLng(getLatLng(location));
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
