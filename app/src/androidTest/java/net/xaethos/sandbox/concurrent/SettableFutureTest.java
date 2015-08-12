@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class SettableFutureTest extends AndroidTestCase {
 
@@ -46,10 +45,8 @@ public class SettableFutureTest extends AndroidTestCase {
     public void testSetWithListener() throws Exception {
         Object value = new Object();
         future.addListener(listener, mTestThread.getHandler());
+
         future.set(value);
-
-        verifyZeroInteractions(listener);
-
         mTestThread.awaitHandling();
 
         verify(listener, only()).onSuccess(value);
@@ -59,10 +56,8 @@ public class SettableFutureTest extends AndroidTestCase {
     public void testSetException() throws Exception {
         Throwable error = new Exception();
         future.addListener(listener, mTestThread.getHandler());
+
         future.setException(error);
-
-        verifyZeroInteractions(listener);
-
         mTestThread.awaitHandling();
 
         verify(listener, only()).onFailure(error);
