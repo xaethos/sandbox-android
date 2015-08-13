@@ -6,53 +6,60 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.verify;
 
 public class FormControllerTest {
 
     PrettyFormFragment.FormController formController;
+    Scheduler testScheduler;
 
     @Before
     public void setUp() throws Exception {
         formController = new PrettyFormFragment.FormController();
+        testScheduler = Schedulers.immediate();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void subscribeEmailObservableNonNull() throws Exception {
+        formController.setEmailTextChangeObservable(null);
     }
 
     @Test
-    public void emailTextAccessors() throws Exception {
-        assertThat(formController.getEmailText(), nullValue());
+    public void emailValid() throws Exception {
+        Action1<CharSequence> action = mockAction();
+        formController.setEmailTextChangeObservable(Observable.just("foo@example.com"));
 
-        formController.setEmailText("asdf");
-        assertThat(formController.getEmailText(), is(equalString("asdf")));
+        formController.getEmailErrorsObservable()
+                .subscribeOn(testScheduler)
+                .observeOn(testScheduler)
+                .subscribe(action);
+
+        verify(action, only()).call(null);
     }
 
     @Test
-    public void emailErrorAccessors() throws Exception {
-        assertThat(formController.getEmailError(), nullValue());
-        assertThat(formController.isEmailValid(), is(true));
+    public void emailInvalidIfEmpty() throws Exception {
+        Action1<CharSequence> action = mockAction();
+        formController.setEmailTextChangeObservable(Observable.just(""));
 
-        formController.setEmailError("bad!");
+        formController.getEmailErrorsObservable()
+                .subscribeOn(testScheduler)
+                .observeOn(testScheduler)
+                .subscribe(action);
 
-        assertThat(formController.getEmailError(), is(equalString("bad!")));
-        assertThat(formController.isEmailValid(), is(false));
-
-        formController.setEmailError("");
-
-        assertThat(formController.getEmailError(), is(nullValue()));
-        assertThat(formController.isEmailValid(), is(true));
+        verify(action, only()).call("required");
     }
 
-    @Test
-    public void emailValidations() throws Exception {
-        formController.setEmailText("");
-
-        assertThat(formController.getEmailError(), is(equalString("cannot be empty")));
-        assertThat(formController.isEmailValid(), is(false));
-
-        formController.setEmailText("a");
-
-        assertThat(formController.isEmailValid(), is(true));
+    @SuppressWarnings("unchecked")
+    private static <T> Action1<T> mockAction() {
+        return mock(Action1.class);
     }
 
     private static Matcher<? super CharSequence> equalString(final CharSequence text) {

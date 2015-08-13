@@ -13,11 +13,12 @@ import net.xaethos.sandbox.R;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.subscriptions.CompositeSubscription;
 
 public class PrettyFormFragment extends Fragment {
 
-    TextInputLayout mEmailInput;
     TextInputLayout mThingamajigInput;
     TextInputLayout mFiddlesticksInput;
 
@@ -36,7 +37,17 @@ public class PrettyFormFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_pretty_form, container, false);
         mSubscriptions = new CompositeSubscription();
 
-        mEmailInput = setUpTextInputLayout(root, R.id.input_email);
+        final TextInputLayout emailInput = setUpTextInputLayout(root, R.id.input_email);
+        TextChangeEventStream stream = new TextChangeEventStream();
+        emailInput.getEditText().addTextChangedListener(stream.getTextWatcher());
+        mController.setEmailTextChangeObservable(stream.getObservable());
+        mController.getEmailErrorsObservable().subscribe(new Action1<CharSequence>() {
+            @Override
+            public void call(CharSequence errorText) {
+                emailInput.setError(errorText);
+            }
+        });
+
         mThingamajigInput = setUpTextInputLayout(root, R.id.input_thingamajig);
         mFiddlesticksInput = setUpTextInputLayout(root, R.id.input_fiddlesticks);
 
@@ -45,6 +56,9 @@ public class PrettyFormFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        mThingamajigInput = null;
+        mFiddlesticksInput = null;
+
         mSubscriptions.unsubscribe();
         mSubscriptions = null;
         super.onDestroyView();
@@ -107,39 +121,25 @@ public class PrettyFormFragment extends Fragment {
 
     public static class FormController {
 
-        private CharSequence mEmailText;
-        private CharSequence mEmailError;
+        private Observable<CharSequence> mEmailErrorsObservable;
 
-        public CharSequence getEmailText() {
-            return mEmailText;
+        public void setEmailTextChangeObservable(
+                Observable<? extends CharSequence> observable) {
+            mEmailErrorsObservable = observable.map(VALIDATE_NOT_EMPTY);
         }
 
-        public void setEmailText(CharSequence emailText) {
-            mEmailError = validateNotEmpty(emailText);
-            mEmailText = emailText;
+        public Observable<CharSequence> getEmailErrorsObservable() {
+            return mEmailErrorsObservable;
         }
 
-        public CharSequence getEmailError() {
-            return mEmailError;
-        }
-
-        public void setEmailError(CharSequence emailError) {
-            mEmailError = nullIfEmpty(emailError);
-        }
-
-        public boolean isEmailValid() {
-            return mEmailError == null;
-        }
-
-        private CharSequence nullIfEmpty(CharSequence text) {
-            if (text == null) return null;
-            return text.length() == 0 ? null : text;
-        }
-
-        private CharSequence validateNotEmpty(CharSequence text) {
-            if (text != null && text.length() > 0) return null;
-            return "cannot be empty";
-        }
+        private static final Func1<CharSequence, CharSequence> VALIDATE_NOT_EMPTY =
+                new Func1<CharSequence, CharSequence>() {
+                    @Override
+                    public CharSequence call(CharSequence inputText) {
+                        if (inputText != null && inputText.length() > 0) return null;
+                        return "required";
+                    }
+                };
 
     }
 
