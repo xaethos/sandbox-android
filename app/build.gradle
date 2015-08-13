@@ -65,3 +65,12 @@ android {
         //androidTestCompile 'org.skyscreamer:jsonassert:1.2.3'
     }
 }
+
+// This is to combine the unit test code coverage into the connectedTest report
+project.afterEvaluate {
+    def append = "append=true"
+    def destFile = "destfile=$buildDir/outputs/code-coverage/connected/coverage.ec"
+    testDebug.jvmArgs "-javaagent:$buildDir/intermediates/jacoco/jacocoagent.jar=$append,$destFile"
+
+    createDebugCoverageReport.dependsOn testDebug
+}
