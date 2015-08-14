@@ -19,9 +19,6 @@ import rx.subscriptions.CompositeSubscription;
 
 public class PrettyFormFragment extends Fragment {
 
-    TextInputLayout mThingamajigInput;
-    TextInputLayout mFiddlesticksInput;
-
     FormController mController;
     CompositeSubscription mSubscriptions;
 
@@ -48,17 +45,22 @@ public class PrettyFormFragment extends Fragment {
             }
         });
 
-        mThingamajigInput = setUpTextInputLayout(root, R.id.input_thingamajig);
-        mFiddlesticksInput = setUpTextInputLayout(root, R.id.input_fiddlesticks);
+        setUpTextInputLayout(root, R.id.input_thingamajig);
+        setUpTextInputLayout(root, R.id.input_fiddlesticks);
+
+        final View submitButton = root.findViewById(R.id.btn_submit);
+        mController.getSubmitEnabledObservable().subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean aBoolean) {
+                submitButton.setEnabled(aBoolean);
+            }
+        });
 
         return root;
     }
 
     @Override
     public void onDestroyView() {
-        mThingamajigInput = null;
-        mFiddlesticksInput = null;
-
         mSubscriptions.unsubscribe();
         mSubscriptions = null;
         super.onDestroyView();
@@ -122,22 +124,43 @@ public class PrettyFormFragment extends Fragment {
     public static class FormController {
 
         private Observable<CharSequence> mEmailErrorsObservable;
+        private Observable<Boolean> mSubmitEnabledObservable;
+
+        // Inputs
 
         public void setEmailTextChangeObservable(
                 Observable<? extends CharSequence> observable) {
             mEmailErrorsObservable = observable.map(VALIDATE_NOT_EMPTY);
+            mSubmitEnabledObservable =
+                    mEmailErrorsObservable.map(new Func1<CharSequence, Boolean>() {
+                        @Override
+                        public Boolean call(CharSequence errorText) {
+                            return isEmpty(errorText);
+                        }
+                    });
         }
+
+        // Outputs
 
         public Observable<CharSequence> getEmailErrorsObservable() {
             return mEmailErrorsObservable;
+        }
+
+        public Observable<Boolean> getSubmitEnabledObservable() {
+            return mSubmitEnabledObservable;
+        }
+
+        // Private
+
+        private static boolean isEmpty(CharSequence text) {
+            return text == null || text.length() == 0;
         }
 
         private static final Func1<CharSequence, CharSequence> VALIDATE_NOT_EMPTY =
                 new Func1<CharSequence, CharSequence>() {
                     @Override
                     public CharSequence call(CharSequence inputText) {
-                        if (inputText != null && inputText.length() > 0) return null;
-                        return "required";
+                        return isEmpty(inputText) ? "required" : null;
                     }
                 };
 

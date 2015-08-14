@@ -33,28 +33,54 @@ public class FormControllerTest {
 
     @Test
     public void emailValid() throws Exception {
-        Action1<CharSequence> action = mockAction();
+        Action1<CharSequence> emailError = mockAction();
         formController.setEmailTextChangeObservable(Observable.just("foo@example.com"));
 
         formController.getEmailErrorsObservable()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
-                .subscribe(action);
+                .subscribe(emailError);
 
-        verify(action, only()).call(null);
+        verify(emailError, only()).call(null);
     }
 
     @Test
     public void emailInvalidIfEmpty() throws Exception {
-        Action1<CharSequence> action = mockAction();
+        Action1<CharSequence> emailError = mockAction();
         formController.setEmailTextChangeObservable(Observable.just(""));
 
         formController.getEmailErrorsObservable()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
-                .subscribe(action);
+                .subscribe(emailError);
 
-        verify(action, only()).call("required");
+        verify(emailError, only()).call("required");
+    }
+
+    @Test
+    public void submitEnabledWhenAllFieldsValid() throws Exception {
+        Action1<Boolean> setEnabled = mockAction();
+        formController.setEmailTextChangeObservable(Observable.just("a@b.com"));
+
+        formController.getSubmitEnabledObservable()
+                .subscribeOn(testScheduler)
+                .observeOn(testScheduler)
+                .subscribe(setEnabled);
+
+        verify(setEnabled, only()).call(true);
+    }
+
+    @Test
+    public void submitDisabledWhenAFieldIsInvalid() throws Exception {
+        Action1<Boolean> setEnabled = mockAction();
+        formController.setEmailTextChangeObservable(Observable.just(""));
+
+        formController.getSubmitEnabledObservable()
+                .subscribeOn(testScheduler)
+                .observeOn(testScheduler)
+                .subscribe(setEnabled);
+
+        verify(setEnabled, only()).call(false);
     }
 
     @SuppressWarnings("unchecked")
