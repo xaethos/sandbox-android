@@ -6,10 +6,10 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 
-import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
@@ -20,26 +20,24 @@ public class FormControllerTest {
     PrettyFormFragment.FormController formController;
     Scheduler testScheduler;
 
+    PublishSubject<CharSequence> emailTextInput;
+
     @Before
     public void setUp() throws Exception {
-        formController = new PrettyFormFragment.FormController();
+        emailTextInput = PublishSubject.create();
+        formController = new PrettyFormFragment.FormController(emailTextInput);
         testScheduler = Schedulers.immediate();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void subscribeEmailObservableNonNull() throws Exception {
-        formController.setEmailTextChangeObservable(null);
     }
 
     @Test
     public void emailValid() throws Exception {
         Action1<CharSequence> emailError = mockAction();
-        formController.setEmailTextChangeObservable(Observable.just("foo@example.com"));
-
-        formController.getEmailErrorsObservable()
+        formController.emailErrorControl()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
                 .subscribe(emailError);
+
+        emailTextInput.onNext("foo@example.com");
 
         verify(emailError, only()).call(null);
     }
@@ -47,12 +45,12 @@ public class FormControllerTest {
     @Test
     public void emailInvalidIfEmpty() throws Exception {
         Action1<CharSequence> emailError = mockAction();
-        formController.setEmailTextChangeObservable(Observable.just(""));
-
-        formController.getEmailErrorsObservable()
+        formController.emailErrorControl()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
                 .subscribe(emailError);
+
+        emailTextInput.onNext("");
 
         verify(emailError, only()).call("required");
     }
@@ -60,12 +58,12 @@ public class FormControllerTest {
     @Test
     public void submitEnabledWhenAllFieldsValid() throws Exception {
         Action1<Boolean> setEnabled = mockAction();
-        formController.setEmailTextChangeObservable(Observable.just("a@b.com"));
-
-        formController.getSubmitEnabledObservable()
+        formController.submitEnabledControl()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
                 .subscribe(setEnabled);
+
+        emailTextInput.onNext("a@b.com");
 
         verify(setEnabled, only()).call(true);
     }
@@ -73,12 +71,12 @@ public class FormControllerTest {
     @Test
     public void submitDisabledWhenAFieldIsInvalid() throws Exception {
         Action1<Boolean> setEnabled = mockAction();
-        formController.setEmailTextChangeObservable(Observable.just(""));
-
-        formController.getSubmitEnabledObservable()
+        formController.submitEnabledControl()
                 .subscribeOn(testScheduler)
                 .observeOn(testScheduler)
                 .subscribe(setEnabled);
+
+        emailTextInput.onNext("");
 
         verify(setEnabled, only()).call(false);
     }

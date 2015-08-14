@@ -23,33 +23,29 @@ public class PrettyFormFragment extends Fragment {
     CompositeSubscription mSubscriptions;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mController = new FormController();
-    }
-
-    @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_pretty_form, container, false);
-        mSubscriptions = new CompositeSubscription();
 
         final TextInputLayout emailInput = setUpTextInputLayout(root, R.id.input_email);
+        final View submitButton = root.findViewById(R.id.btn_submit);
+        setUpTextInputLayout(root, R.id.input_thingamajig);
+        setUpTextInputLayout(root, R.id.input_fiddlesticks);
+
         TextChangeEventStream stream = new TextChangeEventStream();
         emailInput.getEditText().addTextChangedListener(stream.getTextWatcher());
-        mController.setEmailTextChangeObservable(stream.getObservable());
-        mController.getEmailErrorsObservable().subscribe(new Action1<CharSequence>() {
+
+        mSubscriptions = new CompositeSubscription();
+        mController = new FormController(stream.getObservable());
+
+        mController.emailErrorControl().subscribe(new Action1<CharSequence>() {
             @Override
             public void call(CharSequence errorText) {
                 emailInput.setError(errorText);
             }
         });
 
-        setUpTextInputLayout(root, R.id.input_thingamajig);
-        setUpTextInputLayout(root, R.id.input_fiddlesticks);
-
-        final View submitButton = root.findViewById(R.id.btn_submit);
-        mController.getSubmitEnabledObservable().subscribe(new Action1<Boolean>() {
+        mController.submitEnabledControl().subscribe(new Action1<Boolean>() {
             @Override
             public void call(Boolean aBoolean) {
                 submitButton.setEnabled(aBoolean);
@@ -123,14 +119,11 @@ public class PrettyFormFragment extends Fragment {
 
     public static class FormController {
 
-        private Observable<CharSequence> mEmailErrorsObservable;
-        private Observable<Boolean> mSubmitEnabledObservable;
+        private final Observable<CharSequence> mEmailErrorsObservable;
+        private final Observable<Boolean> mSubmitEnabledObservable;
 
-        // Inputs
-
-        public void setEmailTextChangeObservable(
-                Observable<? extends CharSequence> observable) {
-            mEmailErrorsObservable = observable.map(VALIDATE_NOT_EMPTY);
+        public FormController(Observable<? extends CharSequence> emailText) {
+            mEmailErrorsObservable = emailText.map(VALIDATE_NOT_EMPTY);
             mSubmitEnabledObservable =
                     mEmailErrorsObservable.map(new Func1<CharSequence, Boolean>() {
                         @Override
@@ -142,11 +135,11 @@ public class PrettyFormFragment extends Fragment {
 
         // Outputs
 
-        public Observable<CharSequence> getEmailErrorsObservable() {
+        public Observable<CharSequence> emailErrorControl() {
             return mEmailErrorsObservable;
         }
 
-        public Observable<Boolean> getSubmitEnabledObservable() {
+        public Observable<Boolean> submitEnabledControl() {
             return mSubmitEnabledObservable;
         }
 
