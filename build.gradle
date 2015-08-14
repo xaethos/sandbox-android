@@ -20,7 +20,7 @@ allprojects {
 }
 
 if (project.hasProperty('preDexLibraries')) {
-    var preDexLibraries = project.property('preDexLibraries').toBoolean()
+    def preDexLibraries = project.property('preDexLibraries').toBoolean()
 
     subprojects {
         project.plugins.whenPluginAdded { plugin ->
