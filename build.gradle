@@ -19,14 +19,16 @@ allprojects {
     }
 }
 
-project.ext.preDexLibs = !project.hasProperty('disablePreDex')
+if (project.hasProperty('preDexLibraries')) {
+    var preDexLibraries = project.property('preDexLibraries').toBoolean()
 
-subprojects {
-    project.plugins.whenPluginAdded { plugin ->
-        if ("com.android.build.gradle.AppPlugin".equals(plugin.class.name)) {
-            project.android.dexOptions.preDexLibraries = rootProject.ext.preDexLibs
-        } else if ("com.android.build.gradle.LibraryPlugin".equals(plugin.class.name)) {
-            project.android.dexOptions.preDexLibraries = rootProject.ext.preDexLibs
+    subprojects {
+        project.plugins.whenPluginAdded { plugin ->
+            if ("com.android.build.gradle.AppPlugin".equals(plugin.class.name)) {
+                project.android.dexOptions.preDexLibraries = preDexLibraries
+            } else if ("com.android.build.gradle.LibraryPlugin".equals(plugin.class.name)) {
+                project.android.dexOptions.preDexLibraries = preDexLibraries
+            }
         }
     }
 }
