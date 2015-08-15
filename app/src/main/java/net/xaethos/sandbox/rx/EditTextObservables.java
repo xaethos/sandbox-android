@@ -16,7 +16,7 @@ public class EditTextObservables {
     }
 
     public static Observable<Editable> afterTextChangedObservable(EditText editText) {
-        return Observable.create(new OnEditableSubscribe(editText)).publish().refCount();
+        return Observable.create(new OnEditableSubscribe(editText));
     }
 
     private static class OnEditableSubscribe implements Observable.OnSubscribe<Editable> {

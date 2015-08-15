@@ -61,7 +61,10 @@ public class PrettyFormFragment extends Fragment {
         private final Observable<Boolean> mSubmitEnabledObservable;
 
         public FormController(Observable<? extends CharSequence> emailText) {
-            mEmailErrorsObservable = emailText.map(VALIDATE_NOT_EMPTY);
+            Observable<? extends CharSequence> sharedEmailText = emailText.share();
+
+            mEmailErrorsObservable = sharedEmailText.map(VALIDATE_NOT_EMPTY);
+
             mSubmitEnabledObservable =
                     mEmailErrorsObservable.map(new Func1<CharSequence, Boolean>() {
                         @Override
