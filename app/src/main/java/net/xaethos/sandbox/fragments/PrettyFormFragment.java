@@ -26,16 +26,23 @@ public class PrettyFormFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_pretty_form, container, false);
 
         final TextInputLayout emailInput = setUpTextInputLayout(root, R.id.input_email);
+        final TextInputLayout thingamajigInput = setUpTextInputLayout(root, R.id.input_thingamajig);
+        final TextInputLayout fiddlesticksInput =
+                setUpTextInputLayout(root, R.id.input_fiddlesticks);
         final View submitButton = root.findViewById(R.id.btn_submit);
-        setUpTextInputLayout(root, R.id.input_thingamajig);
-        setUpTextInputLayout(root, R.id.input_fiddlesticks);
 
         FormController controller =
-                new FormController(afterTextChangedObservable(emailInput.getEditText()));
+                new FormController(afterTextChangedObservable(emailInput.getEditText()),
+                        afterTextChangedObservable(thingamajigInput.getEditText()),
+                        afterTextChangedObservable(fiddlesticksInput.getEditText()));
 
         mSubscriptions = new CompositeSubscription();
-        mSubscriptions.add(controller.emailErrorControl()
+        mSubscriptions.add(controller.emailErrors()
                 .subscribe(FormActions.setTextInputError(emailInput)));
+        mSubscriptions.add(controller.thingamajigErrors()
+                .subscribe(FormActions.setTextInputError(thingamajigInput)));
+        mSubscriptions.add(controller.fiddlesticksErrors()
+                .subscribe(FormActions.setTextInputError(fiddlesticksInput)));
         mSubscriptions.add(controller.submitEnabledControl()
                 .subscribe(FormActions.setViewEnabled(submitButton)));
 
@@ -58,26 +65,56 @@ public class PrettyFormFragment extends Fragment {
     public static class FormController {
 
         private final Observable<CharSequence> mEmailErrorsObservable;
+        private final Observable<CharSequence> mThingamajigErrorsObservable;
+        private final Observable<CharSequence> mFiddlesticksErrorsObservable;
+
         private final Observable<Boolean> mSubmitEnabledObservable;
 
-        public FormController(Observable<? extends CharSequence> emailText) {
+        public FormController(
+                Observable<? extends CharSequence> emailText,
+                Observable<? extends CharSequence> thingamajigText,
+                Observable<? extends CharSequence> fiddlesticksText) {
             Observable<? extends CharSequence> sharedEmailText = emailText.share();
+            Observable<? extends CharSequence> sharedThingamajigText = thingamajigText.share();
+            Observable<? extends Integer> sharedFiddlesticksCount =
+                    fiddlesticksText.map(new Func1<CharSequence, Integer>() {
+                        @Override
+                        public Integer call(CharSequence countText) {
+                            if (countText == null) return null;
+                            try {
+                                return Integer.parseInt(countText.toString());
+                            } catch (NumberFormatException e) {
+                                return null;
+                            }
+                        }
+                    }).share();
 
             mEmailErrorsObservable = sharedEmailText.map(VALIDATE_NOT_EMPTY);
-
-            mSubmitEnabledObservable =
-                    mEmailErrorsObservable.map(new Func1<CharSequence, Boolean>() {
+            mThingamajigErrorsObservable = sharedThingamajigText.map(VALIDATE_NOT_EMPTY);
+            mFiddlesticksErrorsObservable =
+                    sharedFiddlesticksCount.map(new Func1<Integer, CharSequence>() {
                         @Override
-                        public Boolean call(CharSequence errorText) {
-                            return isEmpty(errorText);
+                        public CharSequence call(Integer integer) {
+                            if (integer == null) return "invalid number";
+                            return null;
                         }
                     });
+
+            mSubmitEnabledObservable = mEmailErrorsObservable.map(NO_ERROR);
         }
 
         // Outputs
 
-        public Observable<CharSequence> emailErrorControl() {
+        public Observable<CharSequence> emailErrors() {
             return mEmailErrorsObservable;
+        }
+
+        public Observable<CharSequence> thingamajigErrors() {
+            return mThingamajigErrorsObservable;
+        }
+
+        public Observable<CharSequence> fiddlesticksErrors() {
+            return mFiddlesticksErrorsObservable;
         }
 
         public Observable<Boolean> submitEnabledControl() {
@@ -89,6 +126,14 @@ public class PrettyFormFragment extends Fragment {
         private static boolean isEmpty(CharSequence text) {
             return text == null || text.length() == 0;
         }
+
+        private static final Func1<CharSequence, Boolean> NO_ERROR =
+                new Func1<CharSequence, Boolean>() {
+                    @Override
+                    public Boolean call(CharSequence errorText) {
+                        return isEmpty(errorText);
+                    }
+                };
 
         private static final Func1<CharSequence, CharSequence> VALIDATE_NOT_EMPTY =
                 new Func1<CharSequence, CharSequence>() {
