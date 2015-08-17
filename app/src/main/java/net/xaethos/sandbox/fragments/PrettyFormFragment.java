@@ -10,8 +10,12 @@ import android.view.ViewGroup;
 import net.xaethos.sandbox.R;
 import net.xaethos.sandbox.rx.FormActions;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.FuncN;
 import rx.subscriptions.CompositeSubscription;
 
 import static net.xaethos.sandbox.rx.EditTextObservables.afterTextChangedObservable;
@@ -74,33 +78,21 @@ public class PrettyFormFragment extends Fragment {
                 Observable<? extends CharSequence> emailText,
                 Observable<? extends CharSequence> thingamajigText,
                 Observable<? extends CharSequence> fiddlesticksText) {
-            Observable<? extends CharSequence> sharedEmailText = emailText.share();
-            Observable<? extends CharSequence> sharedThingamajigText = thingamajigText.share();
-            Observable<? extends Integer> sharedFiddlesticksCount =
-                    fiddlesticksText.map(new Func1<CharSequence, Integer>() {
-                        @Override
-                        public Integer call(CharSequence countText) {
-                            if (countText == null) return null;
-                            try {
-                                return Integer.parseInt(countText.toString());
-                            } catch (NumberFormatException e) {
-                                return null;
-                            }
-                        }
-                    }).share();
 
-            mEmailErrorsObservable = sharedEmailText.map(VALIDATE_NOT_EMPTY);
-            mThingamajigErrorsObservable = sharedThingamajigText.map(VALIDATE_NOT_EMPTY);
-            mFiddlesticksErrorsObservable =
-                    sharedFiddlesticksCount.map(new Func1<Integer, CharSequence>() {
+            mEmailErrorsObservable = createEmailValidation(emailText.share());
+            mThingamajigErrorsObservable = createThingmajigValidation(thingamajigText.share());
+            mFiddlesticksErrorsObservable = createFiddlesticksValidation(fiddlesticksText.share());
+
+            mSubmitEnabledObservable =
+                    Observable.combineLatest(Arrays.asList(mEmailErrorsObservable,
+                            mThingamajigErrorsObservable,
+                            mFiddlesticksErrorsObservable), new FuncN<Boolean>() {
                         @Override
-                        public CharSequence call(Integer integer) {
-                            if (integer == null) return "invalid number";
-                            return null;
+                        public Boolean call(Object... errors) {
+                            for (Object error : errors) if (error != null) return false;
+                            return true;
                         }
                     });
-
-            mSubmitEnabledObservable = mEmailErrorsObservable.map(NO_ERROR);
         }
 
         // Outputs
@@ -123,25 +115,51 @@ public class PrettyFormFragment extends Fragment {
 
         // Private
 
-        private static boolean isEmpty(CharSequence text) {
-            return text == null || text.length() == 0;
+        private static final Pattern PATTERN_EMAIL =
+                Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\" +
+                        ".[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\" +
+                        ".)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+
+        private static Observable<CharSequence> createEmailValidation(
+                Observable<? extends
+                        CharSequence> input) {
+            return input.map(new Func1<CharSequence, CharSequence>() {
+                @Override
+                public CharSequence call(CharSequence inputText) {
+                    if (inputText.length() == 0) return "required";
+                    if (!PATTERN_EMAIL.matcher(inputText).matches()) return "invalid email";
+                    return null;
+                }
+            });
         }
 
-        private static final Func1<CharSequence, Boolean> NO_ERROR =
-                new Func1<CharSequence, Boolean>() {
-                    @Override
-                    public Boolean call(CharSequence errorText) {
-                        return isEmpty(errorText);
-                    }
-                };
+        private static Observable<CharSequence> createThingmajigValidation(
+                Observable<? extends
+                        CharSequence> input) {
+            return input.map(new Func1<CharSequence, CharSequence>() {
+                @Override
+                public CharSequence call(CharSequence charSequence) {
+                    return charSequence.length() > 10 ? "max 10 characters" : null;
+                }
+            });
+        }
 
-        private static final Func1<CharSequence, CharSequence> VALIDATE_NOT_EMPTY =
-                new Func1<CharSequence, CharSequence>() {
-                    @Override
-                    public CharSequence call(CharSequence inputText) {
-                        return isEmpty(inputText) ? "required" : null;
+        private static Observable<CharSequence> createFiddlesticksValidation(
+                Observable<? extends CharSequence> textInput) {
+            return textInput.map(new Func1<CharSequence, CharSequence>() {
+                public CharSequence call(CharSequence countText) {
+                    if (countText.length() == 0) return null;
+                    int count;
+                    try {
+                        count = Integer.parseInt(countText.toString());
+                    } catch (NumberFormatException e) {
+                        return "invalid number";
                     }
-                };
+                    if (count < 0) return "must be positive";
+                    return null;
+                }
+            });
+        }
 
     }
 
