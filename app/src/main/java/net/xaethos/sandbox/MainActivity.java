@@ -13,6 +13,7 @@ import android.view.MenuItem;
 
 import net.xaethos.sandbox.fragments.ExpandTextFragment;
 import net.xaethos.sandbox.fragments.LoaderAdapterFragment;
+import net.xaethos.sandbox.fragments.PrettyFormFragment;
 import net.xaethos.sandbox.fragments.RxJavaFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -77,6 +78,9 @@ public class MainActivity extends AppCompatActivity
             break;
         case R.id.nav_rxjava:
             fragment = new RxJavaFragment();
+            break;
+        case R.id.nav_pretty_form:
+            fragment = new PrettyFormFragment();
             break;
         default:
             return false;
