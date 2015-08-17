@@ -79,9 +79,9 @@ public class PrettyFormFragment extends Fragment {
                 Observable<? extends CharSequence> thingamajigText,
                 Observable<? extends CharSequence> fiddlesticksText) {
 
-            mEmailErrorsObservable = createEmailValidation(emailText.share());
-            mThingamajigErrorsObservable = createThingmajigValidation(thingamajigText.share());
-            mFiddlesticksErrorsObservable = createFiddlesticksValidation(fiddlesticksText.share());
+            mEmailErrorsObservable = createEmailValidation(emailText);
+            mThingamajigErrorsObservable = createThingmajigValidation(thingamajigText);
+            mFiddlesticksErrorsObservable = createFiddlesticksValidation(fiddlesticksText);
 
             mSubmitEnabledObservable =
                     Observable.combineLatest(Arrays.asList(mEmailErrorsObservable,
@@ -92,7 +92,7 @@ public class PrettyFormFragment extends Fragment {
                             for (Object error : errors) if (error != null) return false;
                             return true;
                         }
-                    });
+                    }).distinctUntilChanged();
         }
 
         // Outputs
@@ -130,7 +130,7 @@ public class PrettyFormFragment extends Fragment {
                     if (!PATTERN_EMAIL.matcher(inputText).matches()) return "invalid email";
                     return null;
                 }
-            });
+            }).distinctUntilChanged().replay(1).refCount();
         }
 
         private static Observable<CharSequence> createThingmajigValidation(
@@ -141,7 +141,7 @@ public class PrettyFormFragment extends Fragment {
                 public CharSequence call(CharSequence charSequence) {
                     return charSequence.length() > 10 ? "max 10 characters" : null;
                 }
-            });
+            }).distinctUntilChanged().replay(1).refCount();
         }
 
         private static Observable<CharSequence> createFiddlesticksValidation(
@@ -158,7 +158,7 @@ public class PrettyFormFragment extends Fragment {
                     if (count < 0) return "must be positive";
                     return null;
                 }
-            });
+            }).distinctUntilChanged().replay(1).refCount();
         }
 
     }
