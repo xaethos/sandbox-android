@@ -8,6 +8,7 @@ test:
     - circle-android wait-for-boot
     # run tests  against the emulator.
     - >-
+      TERM=dumb
       ./gradlew
       connectedAndroidTest
       createDebugCoverageReport
