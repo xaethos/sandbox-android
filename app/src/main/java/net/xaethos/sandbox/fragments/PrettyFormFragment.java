@@ -18,7 +18,7 @@ import rx.functions.Func1;
 import rx.functions.FuncN;
 import rx.subscriptions.CompositeSubscription;
 
-import static net.xaethos.sandbox.rx.EditTextObservables.afterTextChangedObservable;
+import static net.xaethos.sandbox.rx.EditTextObservables.onTextChangedObservable;
 
 public class PrettyFormFragment extends Fragment {
 
@@ -36,9 +36,9 @@ public class PrettyFormFragment extends Fragment {
         final View submitButton = root.findViewById(R.id.btn_submit);
 
         FormController controller =
-                new FormController(afterTextChangedObservable(emailInput.getEditText()),
-                        afterTextChangedObservable(thingamajigInput.getEditText()),
-                        afterTextChangedObservable(fiddlesticksInput.getEditText()));
+                new FormController(onTextChangedObservable(emailInput.getEditText()),
+                        onTextChangedObservable(thingamajigInput.getEditText()),
+                        onTextChangedObservable(fiddlesticksInput.getEditText()));
 
         mSubscriptions = new CompositeSubscription();
         mSubscriptions.add(controller.emailErrors()

@@ -15,19 +15,19 @@ public class EditTextObservables {
     private EditTextObservables() {
     }
 
-    public static Observable<Editable> afterTextChangedObservable(EditText editText) {
-        return Observable.create(new OnEditableSubscribe(editText));
+    public static Observable<CharSequence> onTextChangedObservable(EditText editText) {
+        return Observable.create(new OnTextChangeSubscribe(editText));
     }
 
-    private static class OnEditableSubscribe implements Observable.OnSubscribe<Editable> {
+    private static class OnTextChangeSubscribe implements Observable.OnSubscribe<CharSequence> {
         private final TextView input;
 
-        public OnEditableSubscribe(final TextView input) {
+        public OnTextChangeSubscribe(final TextView input) {
             this.input = input;
         }
 
         @Override
-        public void call(final Subscriber<? super Editable> subscriber) {
+        public void call(final Subscriber<? super CharSequence> subscriber) {
             final TextWatcher watcher = new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -36,22 +36,25 @@ public class EditTextObservables {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    //noop
+                    subscriber.onNext(s);
                 }
 
                 @Override
                 public void afterTextChanged(final Editable editable) {
-                    subscriber.onNext(editable);
+                    //noop
                 }
             };
 
-            input.addTextChangedListener(watcher);
-            subscriber.add(Subscriptions.create(new Action0() {
-                @Override
-                public void call() {
-                    input.removeTextChangedListener(watcher);
-                }
-            }));
+            if (!subscriber.isUnsubscribed()) {
+                subscriber.onNext(input.getText());
+                input.addTextChangedListener(watcher);
+                subscriber.add(Subscriptions.create(new Action0() {
+                    @Override
+                    public void call() {
+                        input.removeTextChangedListener(watcher);
+                    }
+                }));
+            }
         }
     }
 
