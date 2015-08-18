@@ -79,16 +79,18 @@ public class PrettyFormFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return NAMES.length;
+            return NAMES.length + 1;
         }
 
         @Override
         public String getItem(int position) {
-            return NAMES[position];
+            if (position == 0) return "What's your name?";
+            return NAMES[position - 1];
         }
 
         @Override
         public long getItemId(int position) {
+            if (position == 0) return 0;
             return getItem(position).hashCode();
         }
 
@@ -98,22 +100,22 @@ public class PrettyFormFragment extends Fragment {
         }
 
         @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            return getView(position,
-                    convertView,
-                    parent,
-                    android.R.layout.simple_spinner_dropdown_item);
+        public View getView(int position, View convertView, ViewGroup parent) {
+            int layoutId = position == 0 ? R.layout.spinner_query_item :
+                    android.R.layout.simple_spinner_item;
+            return getView(position, convertView, parent, layoutId);
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return getView(position, convertView, parent, android.R.layout.simple_spinner_item);
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            int layoutId = position == 0 ? R.layout.spinner_query_item :
+                    android.R.layout.simple_spinner_dropdown_item;
+            return getView(position, convertView, parent, layoutId);
         }
 
         private View getView(int position, View convertView, ViewGroup parent, int layoutId) {
-            if (convertView == null) {
-                convertView = mInflater.inflate(layoutId, parent, false);
-            }
+            // Got lazy. TODO: recycle view
+            convertView = mInflater.inflate(layoutId, parent, false);
             TextView label = (TextView) convertView.findViewById(android.R.id.text1);
             label.setText(getItem(position));
             return convertView;
