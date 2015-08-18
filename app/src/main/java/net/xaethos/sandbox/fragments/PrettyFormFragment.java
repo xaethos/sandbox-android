@@ -6,6 +6,9 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import net.xaethos.sandbox.R;
 import net.xaethos.sandbox.rx.FormActions;
@@ -33,6 +36,7 @@ public class PrettyFormFragment extends Fragment {
         final TextInputLayout thingamajigInput = setUpTextInputLayout(root, R.id.input_thingamajig);
         final TextInputLayout fiddlesticksInput =
                 setUpTextInputLayout(root, R.id.input_fiddlesticks);
+        final Spinner nameSpinner = (Spinner) root.findViewById(R.id.spinner_name);
         final View submitButton = root.findViewById(R.id.btn_submit);
 
         FormController controller =
@@ -50,6 +54,8 @@ public class PrettyFormFragment extends Fragment {
         mSubscriptions.add(controller.submitEnabledControl()
                 .subscribe(FormActions.setViewEnabled(submitButton)));
 
+        nameSpinner.setAdapter(new NameAdapter());
+
         return root;
     }
 
@@ -64,6 +70,54 @@ public class PrettyFormFragment extends Fragment {
         TextInputLayout input = (TextInputLayout) container.findViewById(viewId);
         input.setErrorEnabled(true);
         return input;
+    }
+
+    private class NameAdapter extends BaseAdapter {
+        private final String[] NAMES = new String[]{"Pedro", "Juan", "Diego"};
+
+        private final LayoutInflater mInflater = LayoutInflater.from(getActivity());
+
+        @Override
+        public int getCount() {
+            return NAMES.length;
+        }
+
+        @Override
+        public String getItem(int position) {
+            return NAMES[position];
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return getItem(position).hashCode();
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            return getView(position,
+                    convertView,
+                    parent,
+                    android.R.layout.simple_spinner_dropdown_item);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            return getView(position, convertView, parent, android.R.layout.simple_spinner_item);
+        }
+
+        private View getView(int position, View convertView, ViewGroup parent, int layoutId) {
+            if (convertView == null) {
+                convertView = mInflater.inflate(layoutId, parent, false);
+            }
+            TextView label = (TextView) convertView.findViewById(android.R.id.text1);
+            label.setText(getItem(position));
+            return convertView;
+        }
     }
 
     public static class FormController {
