@@ -108,9 +108,11 @@ public class PrettyFormFragment extends Fragment {
 
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            int layoutId = position == 0 ? R.layout.spinner_query_item :
-                    android.R.layout.simple_spinner_dropdown_item;
-            return getView(position, convertView, parent, layoutId);
+            if (position == 0) return new View(getActivity());
+            return getView(position,
+                    convertView,
+                    parent,
+                    android.R.layout.simple_spinner_dropdown_item);
         }
 
         private View getView(int position, View convertView, ViewGroup parent, int layoutId) {
