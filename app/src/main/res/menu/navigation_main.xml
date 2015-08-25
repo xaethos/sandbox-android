@@ -16,6 +16,9 @@
             android:id="@+id/nav_rx_location"
             android:title="@string/sandbox_rx_location" />
         <item
+            android:id="@+id/nav_rx_errors"
+            android:title="@string/sandbox_rx_errors" />
+        <item
             android:id="@+id/nav_pretty_form"
             android:title="@string/sandbox_pretty_form" />
     </group>

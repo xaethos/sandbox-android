@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import net.xaethos.sandbox.fragments.ExpandTextFragment;
 import net.xaethos.sandbox.fragments.LoaderAdapterFragment;
 import net.xaethos.sandbox.fragments.PrettyFormFragment;
+import net.xaethos.sandbox.fragments.RxErrorsFragment;
 import net.xaethos.sandbox.fragments.RxLocationFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -78,6 +79,9 @@ public class MainActivity extends AppCompatActivity
             break;
         case R.id.nav_rx_location:
             fragment = new RxLocationFragment();
+            break;
+        case R.id.nav_rx_errors:
+            fragment = new RxErrorsFragment();
             break;
         case R.id.nav_pretty_form:
             fragment = new PrettyFormFragment();

@@ -8,6 +8,7 @@
     <string name="sandbox_expand_text">Expandable TextView</string>
     <string name="sandbox_complex_layout">Complex Layout</string>
     <string name="sandbox_rx_location">Rx Location</string>
+    <string name="sandbox_rx_errors">Rx Error Handling</string>
     <string name="sandbox_pretty_form">Pretty Form</string>
 
     <string name="title_section1">Section 1</string>
