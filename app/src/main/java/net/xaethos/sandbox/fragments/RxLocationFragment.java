@@ -37,7 +37,7 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
-public class RxJavaFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks {
+public class RxLocationFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks {
 
     GoogleApiClient mApiClient;
 
@@ -61,7 +61,7 @@ public class RxJavaFragment extends Fragment implements GoogleApiClient.Connecti
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_rx_java, container, false);
+        View root = inflater.inflate(R.layout.fragment_rx_location, container, false);
 
         mSubscriptions = new CompositeSubscription();
 

@@ -13,8 +13,8 @@
             android:id="@+id/nav_loader_adapter"
             android:title="@string/sandbox_loader_adapter" />
         <item
-            android:id="@+id/nav_rxjava"
-            android:title="@string/sandbox_rxjava" />
+            android:id="@+id/nav_rx_location"
+            android:title="@string/sandbox_rx_location" />
         <item
             android:id="@+id/nav_pretty_form"
             android:title="@string/sandbox_pretty_form" />
