@@ -24,8 +24,8 @@
     <string-array name="bottles_of_beer">
         <item>%1$d bottles of beer on the wall</item>
         <item>%1$d bottles of beer.</item>
-        <item>Take one down and pass it around</item>
-        <item>%1$d bottles of beer on the wall.</item>
+        <item>Take one down and pass it around…</item>
+        <item>…%1$d bottles of beer on the wall.</item>
     </string-array>
 
     <string-array name="monkeys_on_the_bed">
