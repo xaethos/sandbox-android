@@ -1,5 +1,4 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,37 +13,65 @@
 
         <android.support.v7.widget.CardView
             android:id="@+id/count"
-            style="@style/AppCard"
-            app:contentPadding="16dp">
+            style="@style/AppCard">
 
-            <TextView
-                android:id="@+id/text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="12dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+                <Button
+                    android:id="@+id/action"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:enabled="false"
+                    android:text="restart" />
+            </LinearLayout>
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
             android:id="@+id/song"
-            style="@style/AppCard"
-            app:contentPadding="16dp">
+            style="@style/AppCard">
 
-            <TextView
-                android:id="@id/text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@id/text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="12dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+                <Button
+                    android:id="@id/action"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:enabled="false"
+                    android:text="restart" />
+            </LinearLayout>
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
             android:id="@+id/lyrics"
-            style="@style/AppCard"
-            app:contentPadding="16dp">
+            style="@style/AppCard">
 
             <TextView
                 android:id="@id/text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="12dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
         </android.support.v7.widget.CardView>
     </LinearLayout>
