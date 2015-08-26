@@ -14,7 +14,8 @@ import android.view.MenuItem;
 import net.xaethos.sandbox.fragments.ExpandTextFragment;
 import net.xaethos.sandbox.fragments.LoaderAdapterFragment;
 import net.xaethos.sandbox.fragments.PrettyFormFragment;
-import net.xaethos.sandbox.fragments.RxJavaFragment;
+import net.xaethos.sandbox.fragments.RxErrorsFragment;
+import net.xaethos.sandbox.fragments.RxLocationFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -76,8 +77,11 @@ public class MainActivity extends AppCompatActivity
         case R.id.nav_loader_adapter:
             fragment = new LoaderAdapterFragment();
             break;
-        case R.id.nav_rxjava:
-            fragment = new RxJavaFragment();
+        case R.id.nav_rx_location:
+            fragment = new RxLocationFragment();
+            break;
+        case R.id.nav_rx_errors:
+            fragment = new RxErrorsFragment();
             break;
         case R.id.nav_pretty_form:
             fragment = new PrettyFormFragment();
