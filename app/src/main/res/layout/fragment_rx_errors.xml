@@ -1,35 +1,40 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context="net.xaethos.sandbox.fragments.RxErrorsFragment"
+    tools:ignore="RtlHardcoded,HardcodedText">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        tools:context="net.xaethos.sandbox.fragments.RxErrorsFragment">
+        android:paddingBottom="@dimen/activity_vertical_margin">
 
         <android.support.v7.widget.CardView
             android:id="@+id/count"
-            style="@style/AppCard">
+            style="@style/AppCard"
+            app:contentPadding="16dp">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/text"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                    tools:ignore="HardcodedText" />
-
-            </LinearLayout>
-
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
         </android.support.v7.widget.CardView>
 
+        <android.support.v7.widget.CardView
+            android:id="@+id/song"
+            style="@style/AppCard"
+            app:contentPadding="16dp">
+
+            <TextView
+                android:id="@id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+        </android.support.v7.widget.CardView>
     </LinearLayout>
+
 </ScrollView>

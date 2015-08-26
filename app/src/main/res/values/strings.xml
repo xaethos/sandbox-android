@@ -20,4 +20,25 @@
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="ellipsis">…</string>
+
+    <string-array name="bottles_of_beer">
+        <item>%1$d bottles of beer on the wall</item>
+        <item>%1$d bottles of beer.</item>
+        <item>Take one down and pass it around</item>
+        <item>%1$d bottles of beer on the wall.</item>
+    </string-array>
+
+    <string-array name="monkeys_on_the_bed">
+        <item>%1$d little monkeys jumping on the bed</item>
+        <item>One fell off and bumped his head</item>
+        <item>Mama called the doctor and the doctor said</item>
+        <item>No more monkeys jumping on the bed</item>
+    </string-array>
+
+    <string-array name="little_ducks">
+        <item>%1$d little ducks went swimming one day</item>
+        <item>Over the hill and far away</item>
+        <item>Mother duck said, "Quack, quack, quack, quack."</item>
+        <item>But only %1$d little ducks came back.</item>
+    </string-array>
 </resources>
