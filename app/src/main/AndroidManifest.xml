@@ -18,7 +18,6 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -44,6 +43,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="net.xaethos.sandbox.MainActivity" />
         </activity>
+        <activity
+            android:name=".BottomSheetActivity"
+            android:label="@string/sandbox_bottom_sheet" />
     </application>
 
 </manifest>
