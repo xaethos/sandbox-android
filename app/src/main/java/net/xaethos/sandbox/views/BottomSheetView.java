@@ -9,6 +9,7 @@ import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -16,6 +17,9 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
 
     private final NestedScrollView mScrollView;
     private final NestedScrollingParentHelper mScrollingParentHelper;
+
+    private int mSheetOffset;
+    private int mSheetHeight;
 
     public BottomSheetView(Context context) {
         super(context);
@@ -48,6 +52,9 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
     }
 
     private void initialize() {
+        mSheetOffset = 0;
+        mSheetHeight = 0;
+        mScrollView.setFillViewport(true);
         super.addView(mScrollView, 0, generateDefaultLayoutParams());
     }
 
@@ -90,9 +97,16 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
         int heightSpecSize = MeasureSpec.getSize(heightMeasureSpec);
         int heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
 
+        Log.d("XAE",
+                String.format("onMeasure[%d:%d x %d:%d]",
+                        widthSpecSize,
+                        widthSpecMode,
+                        heightSpecSize,
+                        heightSpecMode));
+
         // Child should always match our width, and we our parent's
         int childWidthSpec;
-        // Make child wrap content... for now.
+        // Measure child's desired height.
         int childHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
         if (widthSpecMode == MeasureSpec.UNSPECIFIED) {
@@ -103,10 +117,28 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
 
         mScrollView.measure(childWidthSpec, childHeightSpec);
 
-        if (heightSpecMode != MeasureSpec.UNSPECIFIED &&
-                mScrollView.getMeasuredHeight() > heightSpecSize) {
-            mScrollView.measure(childWidthSpec,
-                    MeasureSpec.makeMeasureSpec(heightSpecSize, MeasureSpec.EXACTLY));
+        int sheetHeight = mScrollView.getMeasuredHeight();
+        if (sheetHeight != mSheetHeight) {
+            // reset offsets
+            mSheetHeight = sheetHeight;
+            mSheetOffset = 0;
+        }
+
+        // We don't expect to ever be used in UNSPECIFIED mode, but check anyway.
+        if (heightSpecMode != MeasureSpec.UNSPECIFIED) {
+            // If we have scrolled up, add that to the sheet size
+            if (mSheetOffset > 0) sheetHeight += mSheetOffset;
+
+            if (sheetHeight >= heightSpecSize) {
+                // Child wants to be larger that the space we have available, so we are in de facto
+                // FILL mode.
+                mScrollView.measure(childWidthSpec,
+                        MeasureSpec.makeMeasureSpec(heightSpecSize, MeasureSpec.EXACTLY));
+            } else if (mSheetOffset > 0) {
+                // If we have scrolled up, stretch child
+                mScrollView.measure(childWidthSpec,
+                        MeasureSpec.makeMeasureSpec(sheetHeight, MeasureSpec.EXACTLY));
+            }
         }
 
         if (widthSpecMode == MeasureSpec.UNSPECIFIED) {
@@ -119,55 +151,66 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        Log.d("XAE", "onLayout");
         View child = getChildAt(0);
         if (child == null) return;
 
         int width = r - l;
         int height = b - t;
-        int childHeight = child.getMeasuredHeight();
+        int childHeight = mSheetHeight + mSheetOffset;
         int childTop = height - childHeight;
-
         child.layout(0, childTop, width, height);
     }
 
     @Override
     public int getNestedScrollAxes() {
+        Log.d("XAE", "getNestedScrollAxes: " + mScrollingParentHelper.getNestedScrollAxes());
         return mScrollingParentHelper.getNestedScrollAxes();
     }
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
+        Log.d("XAE", "onStartNestedScroll: " + nestedScrollAxes);
         return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
     }
 
     @Override
     public void onNestedScrollAccepted(View child, View target, int axes) {
+        Log.d("XAE", "onNestedScrollAccepted: " + axes);
         mScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
     }
 
     @Override
     public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+        Log.d("XAE", "onNestedPreScroll: " + dy);
+        mSheetOffset += dy;
+        consumed[1] = dy;
+        requestLayout();
     }
 
     @Override
     public void onNestedScroll(
             View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+        Log.d("XAE", String.format("onNestedScroll (%d,%d)", dyConsumed, dyUnconsumed));
     }
 
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        Log.d("XAE", "onNestedPreFling: " + velocityY);
         // Do nothing
         return false;
     }
 
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+        Log.d("XAE", "onNestedFling: " + velocityY);
         // Do nothing
         return false;
     }
 
     @Override
     public void onStopNestedScroll(View child) {
+        Log.d("XAE", "onStopNestedScroll");
         mScrollingParentHelper.onStopNestedScroll(child);
     }
 
