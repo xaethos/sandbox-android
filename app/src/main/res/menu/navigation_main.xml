@@ -27,4 +27,8 @@
         android:id="@+id/nav_complex_layout"
         android:title="@string/sandbox_complex_layout" />
 
+    <item
+        android:id="@+id/action_bottom_sheet"
+        android:title="@string/sandbox_bottom_sheet" />
+
 </menu>
