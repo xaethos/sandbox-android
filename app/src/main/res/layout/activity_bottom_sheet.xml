@@ -17,9 +17,16 @@
         android:padding="10dp">
 
         <Button
+            android:id="@+id/btn_fill"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
+            android:text="Fill" />
+
+        <Button
+            android:id="@+id/btn_wrap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wrap" />
 
         <View
             android:layout_width="match_parent"
@@ -27,9 +34,10 @@
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/btn_dismiss"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Goodbye world!" />
+            android:text="Dismiss!" />
     </LinearLayout>
 
 </net.xaethos.sandbox.views.BottomSheetView>

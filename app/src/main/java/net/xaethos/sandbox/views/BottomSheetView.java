@@ -7,36 +7,40 @@ import android.support.annotation.NonNull;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
 public class BottomSheetView extends ViewGroup implements NestedScrollingParent {
+    private static final int MODE_HIDE = 0;
+    private static final int MODE_WRAP = 1;
+    private static final int MODE_FILL = 2;
 
-    private final NestedScrollView mScrollView;
+    private final NestedScrollView mSheetView;
     private final NestedScrollingParentHelper mScrollingParentHelper;
 
-    private int mSheetOffset;
-    private int mSheetHeight;
+    private int mMode;
+
+    private int mSheetCurrentHeight;
+    private int mSheetWrapHeight;
 
     public BottomSheetView(Context context) {
         super(context);
-        mScrollView = new NestedScrollView(context);
+        mSheetView = new NestedScrollView(context);
         mScrollingParentHelper = new NestedScrollingParentHelper(this);
         initialize();
     }
 
     public BottomSheetView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mScrollView = new NestedScrollView(context);
+        mSheetView = new NestedScrollView(context);
         mScrollingParentHelper = new NestedScrollingParentHelper(this);
         initialize();
     }
 
     public BottomSheetView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mScrollView = new NestedScrollView(context);
+        mSheetView = new NestedScrollView(context);
         mScrollingParentHelper = new NestedScrollingParentHelper(this);
         initialize();
     }
@@ -45,48 +49,72 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
     public BottomSheetView(
             Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        mScrollView = new NestedScrollView(context);
+        mSheetView = new NestedScrollView(context);
         mScrollingParentHelper = new NestedScrollingParentHelper(this);
         initialize();
     }
 
     private void initialize() {
-        mSheetOffset = 0;
-        mSheetHeight = 0;
-        mScrollView.setFillViewport(true);
-        super.addView(mScrollView, 0, generateDefaultLayoutParams());
+        mMode = MODE_WRAP;
+        mSheetCurrentHeight = -1;
+        mSheetView.setFillViewport(true);
+
+        final LayoutParams params = generateDefaultLayoutParams();
+        params.width = LayoutParams.MATCH_PARENT;
+        params.height = LayoutParams.WRAP_CONTENT;
+        super.addView(mSheetView, 0, params);
     }
 
     @Override
     public void addView(@NonNull View child) {
-        if (mScrollView.getChildCount() > 0) {
+        if (mSheetView.getChildCount() > 0) {
             throw new IllegalStateException("BottomSheetView can host only one direct child");
         }
-        mScrollView.addView(child);
+        mSheetView.addView(child);
     }
 
     @Override
     public void addView(@NonNull View child, int index) {
-        if (mScrollView.getChildCount() > 0) {
+        if (mSheetView.getChildCount() > 0) {
             throw new IllegalStateException("BottomSheetView can host only one direct child");
         }
-        mScrollView.addView(child, index);
+        mSheetView.addView(child, index);
     }
 
     @Override
     public void addView(@NonNull View child, ViewGroup.LayoutParams params) {
-        if (mScrollView.getChildCount() > 0) {
+        if (mSheetView.getChildCount() > 0) {
             throw new IllegalStateException("BottomSheetView can host only one direct child");
         }
-        mScrollView.addView(child, params);
+        mSheetView.addView(child, params);
     }
 
     @Override
     public void addView(@NonNull View child, int index, ViewGroup.LayoutParams params) {
-        if (mScrollView.getChildCount() > 0) {
+        if (mSheetView.getChildCount() > 0) {
             throw new IllegalStateException("BottomSheetView can host only one direct child");
         }
-        mScrollView.addView(child, index, params);
+        mSheetView.addView(child, index, params);
+    }
+
+    public final void hide() {
+        setMode(MODE_HIDE);
+    }
+
+    public final void wrap() {
+        setMode(MODE_WRAP);
+    }
+
+    public final void fill() {
+        setMode(MODE_FILL);
+    }
+
+    private void setMode(int mode) {
+        if (mMode != mode) {
+            mMode = mode;
+            mSheetCurrentHeight = -1;
+            requestLayout();
+        }
     }
 
     @Override
@@ -96,47 +124,38 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
         int heightSpecSize = MeasureSpec.getSize(heightMeasureSpec);
         int heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
 
-        // Child should always match our width, and we our parent's
-        int childWidthSpec;
-        // Measure child's desired height.
-        int childHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        // We'll first measure how tall the sheets wants to be
+        int childWidthSpec = getChildMeasureSpec(widthMeasureSpec, 0, LayoutParams.MATCH_PARENT);
+        int childHeightSpec = getChildMeasureSpec(heightMeasureSpec, 0, LayoutParams.WRAP_CONTENT);
 
-        if (widthSpecMode == MeasureSpec.UNSPECIFIED) {
-            childWidthSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
-        } else {
-            childWidthSpec = MeasureSpec.makeMeasureSpec(widthSpecSize, MeasureSpec.EXACTLY);
-        }
+        mSheetView.measure(childWidthSpec, childHeightSpec);
+        mSheetWrapHeight = mSheetView.getMeasuredHeight();
 
-        mScrollView.measure(childWidthSpec, childHeightSpec);
+        // At this point, we have all we need for our own measurements: match parent as possible
+        int width = widthSpecMode == MeasureSpec.UNSPECIFIED ? mSheetView.getMeasuredWidth() :
+                widthSpecSize;
+        int height = heightSpecMode == MeasureSpec.UNSPECIFIED ? mSheetView.getMeasuredHeight() :
+                heightSpecSize;
+        setMeasuredDimension(width, height);
 
-        int sheetHeight = mScrollView.getMeasuredHeight();
-        if (sheetHeight != mSheetHeight) {
-            // reset offsets
-            mSheetHeight = sheetHeight;
-            mSheetOffset = 0;
-        }
-
-        // We don't expect to ever be used in UNSPECIFIED mode, but check anyway.
-        if (heightSpecMode != MeasureSpec.UNSPECIFIED) {
-            // If we have scrolled up, add that to the sheet size
-            if (mSheetOffset > 0) sheetHeight += mSheetOffset;
-
-            if (sheetHeight >= heightSpecSize) {
-                // Child wants to be larger that the space we have available, so we are in de facto
-                // FILL mode.
-                mScrollView.measure(childWidthSpec,
-                        MeasureSpec.makeMeasureSpec(heightSpecSize, MeasureSpec.EXACTLY));
-            } else if (mSheetOffset > 0) {
-                // If we have scrolled up, stretch child
-                mScrollView.measure(childWidthSpec,
-                        MeasureSpec.makeMeasureSpec(sheetHeight, MeasureSpec.EXACTLY));
+        // We might need a second measurement pass for out child, though
+        if (mSheetCurrentHeight < 0) {
+            switch (mMode) {
+            case MODE_FILL:
+                mSheetCurrentHeight = height;
+                break;
+            case MODE_WRAP:
+                mSheetCurrentHeight = mSheetWrapHeight;
+                break;
+            case MODE_HIDE:
+            default:
+                mSheetCurrentHeight = 0;
             }
         }
 
-        if (widthSpecMode == MeasureSpec.UNSPECIFIED) {
-            setMeasuredDimension(mScrollView.getMeasuredWidthAndState(), heightSpecSize);
-        } else {
-            setMeasuredDimension(widthSpecSize, heightSpecSize);
+        if (mSheetView.getMeasuredHeight() != mSheetCurrentHeight) {
+            childHeightSpec = MeasureSpec.makeMeasureSpec(mSheetCurrentHeight, MeasureSpec.EXACTLY);
+            mSheetView.measure(childWidthSpec, childHeightSpec);
         }
 
     }
@@ -148,8 +167,7 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
 
         int width = r - l;
         int height = b - t;
-        int childHeight = mSheetHeight + mSheetOffset;
-        int childTop = height - childHeight;
+        int childTop = height - mSheetCurrentHeight;
         child.layout(0, childTop, width, height);
     }
 
@@ -173,7 +191,7 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
         if (dy == 0) return;
 
         int viewHeight = getHeight();
-        int sheetHeight = mSheetHeight + mSheetOffset;
+        int sheetHeight = mSheetCurrentHeight;
 
         if (dy > 0) {
             // going up
@@ -186,13 +204,14 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
             consumed[1] = Math.max(dy, -sheetHeight);
         }
 
-        mSheetOffset += consumed[1];
+        mSheetCurrentHeight += consumed[1];
         requestLayout();
     }
 
     @Override
     public void onNestedScroll(
             View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+        // Do nothing
     }
 
     @Override
@@ -210,6 +229,18 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
     @Override
     public void onStopNestedScroll(View child) {
         mScrollingParentHelper.onStopNestedScroll(child);
+
+        switch (mMode) {
+        case MODE_FILL:
+            mSheetCurrentHeight = getHeight();
+            break;
+        case MODE_WRAP:
+            mSheetCurrentHeight = mSheetWrapHeight;
+            break;
+        case MODE_HIDE:
+            mSheetCurrentHeight = 0;
+        }
+        requestLayout();
     }
 
 }
