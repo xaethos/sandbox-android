@@ -188,22 +188,13 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
 
     @Override
     public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        if (dy == 0) return;
+        // When scrolling down, only consume overflow
+        if (dy <= 0) return;
 
-        int viewHeight = getHeight();
-        int sheetHeight = mSheetCurrentHeight;
+        int available = getHeight() - mSheetCurrentHeight;
+        if (available <= 0) return;
 
-        if (dy > 0) {
-            // going up
-            int available = viewHeight - sheetHeight;
-            if (available <= 0) return;
-            consumed[1] = Math.min(available, dy);
-        } else {
-            // going down
-            if (sheetHeight <= 0) return;
-            consumed[1] = Math.max(dy, -sheetHeight);
-        }
-
+        consumed[1] = Math.min(available, dy);
         mSheetCurrentHeight += consumed[1];
         requestLayout();
     }
@@ -211,7 +202,12 @@ public class BottomSheetView extends ViewGroup implements NestedScrollingParent 
     @Override
     public void onNestedScroll(
             View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-        // Do nothing
+        // Consume downward overflow only
+        if (dyUnconsumed >= 0) return;
+        if (mSheetCurrentHeight <= 0) return;
+
+        mSheetCurrentHeight = Math.max(0, mSheetCurrentHeight + dyUnconsumed);
+        requestLayout();
     }
 
     @Override
