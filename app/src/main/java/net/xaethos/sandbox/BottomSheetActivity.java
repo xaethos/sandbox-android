@@ -4,11 +4,18 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
 import com.flipboard.bottomsheet.OnSheetDismissedListener;
 
-public class BottomSheetActivity extends FragmentActivity {
+public class BottomSheetActivity extends FragmentActivity implements View.OnClickListener {
+
+    private static final int[] COUNTS = {1, 2, 6};
+    private int countIndex = 0;
+
+    private ViewGroup mLipsumContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,11 +23,9 @@ public class BottomSheetActivity extends FragmentActivity {
 
         setContentView(R.layout.activity_bottom_sheet_2);
 
-//        BottomSheetLayout bottomSheetLayout = new BottomSheetLayout(this);
         final BottomSheetLayout bottomSheetLayout =
                 (BottomSheetLayout) findViewById(R.id.bottomsheet);
 
-//        setContentView(bottomSheetLayout);
         bottomSheetLayout.showWithSheetView(LayoutInflater.from(this)
                         .inflate(R.layout.bottom_sheet, bottomSheetLayout, false),
                 null,
@@ -32,36 +37,27 @@ public class BottomSheetActivity extends FragmentActivity {
                     }
                 });
 
-//        setContentView(R.layout.activity_bottom_sheet);
+        mLipsumContainer = (ViewGroup) findViewById(R.id.container_lipsum);
 
-//        final BottomSheetView sheetView = (BottomSheetView) findViewById(R.id.modal_background);
-//        sheetView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                finish();
-//            }
-//        });
+        findViewById(android.R.id.button1).setOnClickListener(this);
+        findViewById(android.R.id.button2).setOnClickListener(this);
 
-        findViewById(R.id.btn_fill).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bottomSheetLayout.expandSheet();
-            }
-        });
-
-        findViewById(R.id.btn_wrap).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bottomSheetLayout.peekSheet();
-            }
-        });
-
-        findViewById(R.id.btn_dismiss).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bottomSheetLayout.dismissSheet();
-            }
-        });
+        changeCount();
     }
 
+    @Override
+    public void onClick(View v) {
+        changeCount();
+    }
+
+    private void changeCount() {
+        final int count = COUNTS[countIndex++ % COUNTS.length];
+
+        mLipsumContainer.removeAllViews();
+        for (int i = 0; i < count; ++i) {
+            TextView lipsum = new TextView(this);
+            lipsum.setText(R.string.lipsum);
+            mLipsumContainer.addView(lipsum);
+        }
+    }
 }
