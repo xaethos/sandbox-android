@@ -7,8 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.flipboard.bottomsheet.BottomSheetLayout;
-import com.flipboard.bottomsheet.OnSheetDismissedListener;
+import net.xaethos.sandbox.views.BottomSheetView;
 
 public class BottomSheetActivity extends FragmentActivity implements View.OnClickListener {
 
@@ -23,16 +22,14 @@ public class BottomSheetActivity extends FragmentActivity implements View.OnClic
 
         setContentView(R.layout.activity_bottom_sheet_2);
 
-        final BottomSheetLayout bottomSheetLayout =
-                (BottomSheetLayout) findViewById(R.id.bottomsheet);
+        final BottomSheetView bottomSheetLayout = (BottomSheetView) findViewById(R.id.bottomsheet);
+        final View bottomSheetContent =
+                LayoutInflater.from(this).inflate(R.layout.bottom_sheet, bottomSheetLayout, false);
 
-        bottomSheetLayout.showWithSheetView(LayoutInflater.from(this)
-                        .inflate(R.layout.bottom_sheet, bottomSheetLayout, false),
-                null,
-                new OnSheetDismissedListener() {
-
+        bottomSheetLayout.showWithSheetView(bottomSheetContent,
+                new BottomSheetView.OnDismissedListener() {
                     @Override
-                    public void onDismissed(BottomSheetLayout bottomSheetLayout) {
+                    public void onDismissed(BottomSheetView bottomSheetView) {
                         finish();
                     }
                 });
