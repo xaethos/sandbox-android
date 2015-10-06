@@ -20,7 +20,7 @@ public class BottomSheetActivity extends FragmentActivity implements View.OnClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_bottom_sheet_2);
+        setContentView(R.layout.activity_bottom_sheet);
 
         final BottomSheetView bottomSheetView = (BottomSheetView) findViewById(R.id.bottomsheet);
         bottomSheetView.setOnSheetStateChangeListener(new BottomSheetView

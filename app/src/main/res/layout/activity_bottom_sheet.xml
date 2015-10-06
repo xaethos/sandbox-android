@@ -1,12 +1,8 @@
 <net.xaethos.sandbox.views.BottomSheetView
-    android:id="@+id/modal_background"
+    android:id="@+id/bottomsheet"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#3000"
-    android:fitsSystemWindows="true"
-    tools:context="net.xaethos.sandbox.BottomSheetActivity">
+    android:layout_height="match_parent">
 
     <include layout="@layout/bottom_sheet" />
 

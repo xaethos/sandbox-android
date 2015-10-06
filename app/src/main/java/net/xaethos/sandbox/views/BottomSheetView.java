@@ -7,7 +7,6 @@ import android.animation.TimeInterpolator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.LayoutRes;
@@ -23,11 +22,8 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
-
-import net.xaethos.sandbox.R;
 
 public class BottomSheetView extends FrameLayout {
 
@@ -64,23 +60,13 @@ public class BottomSheetView extends FrameLayout {
     private OnLayoutChangeListener onContentLayoutChangeListener;
 
     private Rect contentClipRect = new Rect();
-    public boolean bottomSheetOwnsTouch;
-    private boolean sheetViewOwnsTouch;
+    private boolean bottomSheetOwnsTouch;
+    private boolean contentViewOwnsTouch;
     private float sheetTranslation;
     private VelocityTracker velocityTracker;
     private float minFlingVelocity;
     private float touchSlop;
     private boolean hasIntercepted;
-
-    /**
-     * Some values we need to manage width on tablets
-     */
-    private int screenWidth = 0;
-    private final boolean isTablet = getResources().getBoolean(R.bool.bottomsheet_is_tablet);
-    private final int defaultSheetWidth =
-            getResources().getDimensionPixelSize(R.dimen.bottomsheet_default_sheet_width);
-    private int sheetStartX = 0;
-    private int sheetEndX = 0;
 
     /**
      * Snapshot of the touch's x position on a down event
@@ -139,12 +125,6 @@ public class BottomSheetView extends FrameLayout {
         peek = 0;//getHeight() return 0 at start!
 
         setFocusableInTouchMode(true);
-
-        Point point = new Point();
-        ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
-                .getSize(point);
-        screenWidth = point.x;
-        sheetEndX = screenWidth;
     }
 
     /**
@@ -286,7 +266,7 @@ public class BottomSheetView extends FrameLayout {
             // This allows us to calculate deltas without losing precision which we would have if
             // we calculated deltas based on the previous touch.
             bottomSheetOwnsTouch = false;
-            sheetViewOwnsTouch = false;
+            contentViewOwnsTouch = false;
             downY = event.getY();
             downX = event.getX();
             downSheetTranslation = sheetTranslation;
@@ -303,9 +283,9 @@ public class BottomSheetView extends FrameLayout {
         float deltaY = downY - event.getY();
         float deltaX = downX - event.getX();
 
-        if (!bottomSheetOwnsTouch && !sheetViewOwnsTouch) {
+        if (!bottomSheetOwnsTouch && !contentViewOwnsTouch) {
             bottomSheetOwnsTouch = Math.abs(deltaY) > touchSlop;
-            sheetViewOwnsTouch = Math.abs(deltaX) > touchSlop;
+            contentViewOwnsTouch = Math.abs(deltaX) > touchSlop;
 
             if (bottomSheetOwnsTouch) {
                 if (state == State.PEEKED) {
@@ -316,7 +296,7 @@ public class BottomSheetView extends FrameLayout {
                     cancelEvent.recycle();
                 }
 
-                sheetViewOwnsTouch = false;
+                contentViewOwnsTouch = false;
                 downY = event.getY();
                 downX = event.getX();
                 deltaY = 0;
@@ -420,24 +400,21 @@ public class BottomSheetView extends FrameLayout {
                 }
             }
         } else {
-            // If the user clicks outside of the bottom sheet area we should dismiss the bottom
-            // sheet.
-            boolean touchOutsideBottomSheet =
-                    event.getY() < getHeight() - sheetTranslation || !isXInSheet(event.getX());
-            if (event.getAction() == MotionEvent.ACTION_UP && touchOutsideBottomSheet) {
+            final int x = (int) event.getX();
+            final int y = (int) event.getY();
+            final Rect contentRect = new Rect();
+            getContentView().getHitRect(contentRect);
+
+            // Dismiss if tap is outside of the bottom sheet content.
+            if (event.getAction() == MotionEvent.ACTION_UP && !contentRect.contains(x, y)) {
                 dismissSheet();
                 return true;
             }
 
-            event.offsetLocation(isTablet ? getX() - sheetStartX : 0,
-                    sheetTranslation - getHeight());
+            event.offsetLocation(-contentRect.left, -contentRect.top);
             getContentView().dispatchTouchEvent(event);
         }
         return true;
-    }
-
-    private boolean isXInSheet(float x) {
-        return !isTablet || x >= sheetStartX && x <= sheetEndX;
     }
 
     private boolean isAnimating() {
@@ -580,25 +557,16 @@ public class BottomSheetView extends FrameLayout {
 
         LayoutParams params = (LayoutParams) contentView.getLayoutParams();
         if (params == null) {
-            params = new LayoutParams(
-                    isTablet ? LayoutParams.WRAP_CONTENT : LayoutParams.MATCH_PARENT,
+            params = new LayoutParams(LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT,
                     Gravity.CENTER_HORIZONTAL);
         }
 
-        if (isTablet && params.width == FrameLayout.LayoutParams.WRAP_CONTENT) {
-
+        if (params.width == LayoutParams.WRAP_CONTENT) {
             // Center by default if they didn't specify anything
             if (params.gravity == -1) {
                 params.gravity = Gravity.CENTER_HORIZONTAL;
             }
-
-            params.width = defaultSheetWidth;
-
-            // Update start and end coordinates for touch reference
-            int horizontalSpacing = screenWidth - defaultSheetWidth;
-            sheetStartX = horizontalSpacing / 2;
-            sheetEndX = screenWidth - sheetStartX;
         }
 
         super.addView(contentView, -1, params);
@@ -743,8 +711,6 @@ public class BottomSheetView extends FrameLayout {
         });
         anim.start();
         currentAnimator = anim;
-        sheetStartX = 0;
-        sheetEndX = screenWidth;
     }
 
     /**
@@ -774,16 +740,6 @@ public class BottomSheetView extends FrameLayout {
 
     public void setOnDismissedListener(OnDismissedListener onDismissedListener) {
         this.onDismissedListener = onDismissedListener;
-    }
-
-    /**
-     * Returns whether or not BottomSheetView will assume it's being shown on a tablet.
-     *
-     * @param context Context instance to retrieve resources
-     * @return True if BottomSheetView will assume it's being shown on a tablet, false if not
-     */
-    public static boolean isTablet(Context context) {
-        return context.getResources().getBoolean(R.bool.bottomsheet_is_tablet);
     }
 
     /**
