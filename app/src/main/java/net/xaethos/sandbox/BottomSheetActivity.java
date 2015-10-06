@@ -5,12 +5,13 @@ import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.xaethos.sandbox.views.BottomSheetView;
 
 public class BottomSheetActivity extends FragmentActivity implements View.OnClickListener {
 
-    private static final int[] COUNTS = {1, 2, 6};
+    private static final int[] COUNTS = {1, 2, 6, 10};
     private int countIndex = 0;
 
     private ViewGroup mLipsumContainer;
@@ -22,6 +23,14 @@ public class BottomSheetActivity extends FragmentActivity implements View.OnClic
         setContentView(R.layout.activity_bottom_sheet_2);
 
         final BottomSheetView bottomSheetView = (BottomSheetView) findViewById(R.id.bottomsheet);
+        bottomSheetView.setOnSheetStateChangeListener(new BottomSheetView
+                .OnSheetStateChangeListener() {
+            @Override
+            public void onSheetStateChanged(BottomSheetView.State state) {
+                Toast.makeText(BottomSheetActivity.this, state.toString(), Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
         bottomSheetView.setOnDismissedListener(new BottomSheetView.OnDismissedListener() {
             @Override
             public void onDismissed(BottomSheetView bottomSheetView) {

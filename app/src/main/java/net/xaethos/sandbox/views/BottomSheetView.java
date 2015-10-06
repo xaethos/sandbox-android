@@ -54,7 +54,6 @@ public class BottomSheetView extends FrameLayout {
 
     private State state = State.HIDDEN;
     private float peek;
-    private int currentSheetViewHeight;
 
     private Animator currentAnimator;
     private TimeInterpolator animationInterpolator = new DecelerateInterpolator(1.6f);
@@ -670,12 +669,10 @@ public class BottomSheetView extends FrameLayout {
             }
         });
 
-        // contentView should always be anchored to the bottom of the screen
-        currentSheetViewHeight = contentView.getMeasuredHeight();
         onContentLayoutChangeListener = new OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(
-                    View sheetView,
+                    View contentView,
                     int left,
                     int top,
                     int right,
@@ -684,15 +681,18 @@ public class BottomSheetView extends FrameLayout {
                     int oldTop,
                     int oldRight,
                     int oldBottom) {
-                int newSheetViewHeight = sheetView.getMeasuredHeight();
-                if (state != State.HIDDEN && newSheetViewHeight < currentSheetViewHeight) {
-                    // The sheet can no longer be in the expanded state if it has shrunk
-                    if (state == State.EXPANDED) {
+                int oldHeight = oldBottom - oldTop;
+                int newHeight = bottom - top;
+                if (state != State.HIDDEN) {
+                    if (state == State.EXPANDED && newHeight < oldHeight) {
+                        // The sheet can no longer be in the expanded state if it has shrunk
                         setState(State.PEEKED);
                     }
-                    setSheetTranslation(newSheetViewHeight);
+
+                    if (newHeight != oldHeight) {
+                        setSheetTranslation(newHeight);
+                    }
                 }
-                currentSheetViewHeight = newSheetViewHeight;
             }
         };
         contentView.addOnLayoutChangeListener(onContentLayoutChangeListener);
