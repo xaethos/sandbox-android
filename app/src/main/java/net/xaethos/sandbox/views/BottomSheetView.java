@@ -49,7 +49,6 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private State state = State.HIDDEN;
-    private float peek;
 
     private Animator currentAnimator;
     private TimeInterpolator animationInterpolator = new DecelerateInterpolator(1.6f);
@@ -57,7 +56,8 @@ public class BottomSheetView extends FrameLayout {
 
     private OnDismissedListener onDismissedListener;
     private OnSheetStateChangeListener onSheetStateChangeListener;
-    private OnLayoutChangeListener onContentLayoutChangeListener;
+    private final OnLayoutChangeListener onContentLayoutChangeListener =
+            new ContentLayoutChangeListener();
 
     private Rect contentClipRect = new Rect();
     private boolean bottomSheetOwnsTouch;
@@ -82,11 +82,6 @@ public class BottomSheetView extends FrameLayout {
      * Snapshot of the sheet's translation at the time of the last down event
      */
     private float downSheetTranslation;
-
-    /**
-     * Snapshot of the sheet's state at the time of the last down event
-     */
-    private State downState;
 
     public BottomSheetView(Context context) {
         super(context);
@@ -121,8 +116,6 @@ public class BottomSheetView extends FrameLayout {
         super.addView(dimView,
                 0,
                 new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
-        peek = 0;//getHeight() return 0 at start!
 
         setFocusableInTouchMode(true);
     }
@@ -271,29 +264,27 @@ public class BottomSheetView extends FrameLayout {
             downY = event.getY();
             downX = event.getX();
             downSheetTranslation = sheetTranslation;
-            downState = state;
             velocityTracker.clear();
         }
         velocityTracker.addMovement(event);
 
-        // The max translation is a hard limit while the min translation is where we start
-        // dragging more slowly and allow the sheet to be dismissed.
+        View contentView = getContentView();
+
+        // The max translation is a hard limit.
         float maxSheetTranslation = getMaxSheetTranslation();
-        float peekSheetTranslation = getPeekSheetTranslation();
 
         float deltaY = downY - event.getY();
-        float deltaX = downX - event.getX();
 
         if (!bottomSheetOwnsTouch && !contentViewOwnsTouch) {
             bottomSheetOwnsTouch = Math.abs(deltaY) > touchSlop;
-            contentViewOwnsTouch = Math.abs(deltaX) > touchSlop;
+            contentViewOwnsTouch = Math.abs(downX - event.getX()) > touchSlop;
 
             if (bottomSheetOwnsTouch) {
                 if (state == State.PEEKED) {
                     MotionEvent cancelEvent = MotionEvent.obtain(event);
                     cancelEvent.offsetLocation(0, sheetTranslation - getHeight());
                     cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                    getContentView().dispatchTouchEvent(cancelEvent);
+                    contentView.dispatchTouchEvent(cancelEvent);
                     cancelEvent.recycle();
                 }
 
@@ -301,7 +292,6 @@ public class BottomSheetView extends FrameLayout {
                 downY = event.getY();
                 downX = event.getX();
                 deltaY = 0;
-                deltaX = 0;
             }
         }
 
@@ -313,9 +303,10 @@ public class BottomSheetView extends FrameLayout {
             // If we are scrolling down and the sheet cannot scroll further, go out of expanded
             // mode.
             boolean scrollingDown = deltaY < 0;
-            boolean canScrollUp = canScrollUp(getContentView(),
+            boolean canScrollUp = canScrollUp(contentView,
                     event.getX(),
                     event.getY() + (sheetTranslation - getHeight()));
+
             if (state == State.EXPANDED && scrollingDown && !canScrollUp) {
                 // Reset variables so deltas are correctly calculated from the point at which the
                 // sheet was 'detached' from the top.
@@ -323,14 +314,13 @@ public class BottomSheetView extends FrameLayout {
                 downSheetTranslation = sheetTranslation;
                 velocityTracker.clear();
                 setState(State.PEEKED);
-                setSheetLayerTypeIfEnabled(LAYER_TYPE_HARDWARE);
                 newSheetTranslation = sheetTranslation;
 
                 // Dispatch a cancel event to the sheet to make sure its touch handling is
                 // cleaned up nicely.
                 MotionEvent cancelEvent = MotionEvent.obtain(event);
                 cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                getContentView().dispatchTouchEvent(cancelEvent);
+                contentView.dispatchTouchEvent(cancelEvent);
                 cancelEvent.recycle();
             }
 
@@ -343,60 +333,42 @@ public class BottomSheetView extends FrameLayout {
                 newSheetTranslation = Math.min(maxSheetTranslation, newSheetTranslation);
                 MotionEvent downEvent = MotionEvent.obtain(event);
                 downEvent.setAction(MotionEvent.ACTION_DOWN);
-                getContentView().dispatchTouchEvent(downEvent);
+                contentView.dispatchTouchEvent(downEvent);
                 downEvent.recycle();
                 setState(State.EXPANDED);
-                setSheetLayerTypeIfEnabled(LAYER_TYPE_NONE);
             }
 
             if (state == State.EXPANDED) {
                 // Dispatch the touch to the sheet if we are expanded so it can handle its own
                 // internal scrolling.
                 event.offsetLocation(0, sheetTranslation - getHeight());
-                getContentView().dispatchTouchEvent(event);
+                contentView.dispatchTouchEvent(event);
             } else {
-                // Make delta less effective when sheet is below the minimum translation.
-                // This makes it feel like scrolling in jello which gives the user an indication
-                // that the sheet will be dismissed if they let go.
-                if (newSheetTranslation < peekSheetTranslation) {
-                    newSheetTranslation = peekSheetTranslation -
-                            (peekSheetTranslation - newSheetTranslation) / 4f;
-                }
-
                 setSheetTranslation(newSheetTranslation);
 
                 if (event.getAction() == MotionEvent.ACTION_CANCEL) {
                     // If touch is canceled, go back to previous state, a canceled touch should
                     // never commit an action.
-                    if (downState == State.EXPANDED) {
-                        expandSheet();
-                    } else {
-                        peekSheet();
-                    }
+                    peekSheet(contentView);
                 }
 
                 if (event.getAction() == MotionEvent.ACTION_UP) {
-                    if (newSheetTranslation < peekSheetTranslation) {
-                        dismissSheet();
-                    } else {
-                        // If touch is released, go to a new state depending on velocity.
-                        // If the velocity is not high enough we use the position of the sheet to
-                        // determine the new state.
-                        velocityTracker.computeCurrentVelocity(1000);
-                        float velocityY = velocityTracker.getYVelocity();
-                        if (Math.abs(velocityY) < minFlingVelocity) {
-                            if (sheetTranslation > getHeight() / 2) {
-                                expandSheet();
-                            } else {
-                                peekSheet();
-                            }
+                    // If touch is released, go to a new state depending on velocity.
+                    // If the velocity is not high enough we use the position of the sheet to
+                    // determine the new state.
+                    velocityTracker.computeCurrentVelocity(1000);
+                    float velocityY = velocityTracker.getYVelocity();
+
+                    if (Math.abs(velocityY) >= minFlingVelocity) {
+                        if (velocityY < 0) {
+                            peekSheet(contentView);
                         } else {
-                            if (velocityY < 0) {
-                                expandSheet();
-                            } else {
-                                peekSheet();
-                            }
+                            dismissSheet();
                         }
+                    } else if (newSheetTranslation > (maxSheetTranslation * 2) / 3) {
+                        peekSheet(contentView);
+                    } else {
+                        dismissSheet();
                     }
                 }
             }
@@ -404,7 +376,7 @@ public class BottomSheetView extends FrameLayout {
             final int x = (int) event.getX();
             final int y = (int) event.getY();
             final Rect contentRect = new Rect();
-            getContentView().getHitRect(contentRect);
+            contentView.getHitRect(contentRect);
 
             // Dismiss if tap is outside of the bottom sheet content.
             if (event.getAction() == MotionEvent.ACTION_UP && !contentRect.contains(x, y)) {
@@ -413,7 +385,7 @@ public class BottomSheetView extends FrameLayout {
             }
 
             event.offsetLocation(-contentRect.left, -contentRect.top);
-            getContentView().dispatchTouchEvent(event);
+            contentView.dispatchTouchEvent(event);
         }
         return true;
     }
@@ -447,10 +419,6 @@ public class BottomSheetView extends FrameLayout {
         return view.canScrollVertically(-1);
     }
 
-    private void setSheetLayerTypeIfEnabled(int layerType) {
-        getContentView().setLayerType(layerType, null);
-    }
-
     private void setState(State state) {
         if (this.state == state) return;
 
@@ -460,82 +428,12 @@ public class BottomSheetView extends FrameLayout {
         }
     }
 
-    private boolean hasFullHeightSheet() {
-        return getContentView() == null || getContentView().getHeight() == getHeight();
-    }
-
-    /**
-     * Set the presented sheet to be in an expanded state.
-     */
-    public void expandSheet() {
-        cancelCurrentAnimation();
-        setSheetLayerTypeIfEnabled(LAYER_TYPE_NONE);
-        ObjectAnimator anim = ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, getHeight());
-        anim.setDuration(ANIMATION_DURATION);
-        anim.setInterpolator(animationInterpolator);
-        anim.addListener(new CancelDetectionAnimationListener() {
-            @Override
-            public void onAnimationEnd(@NonNull Animator animation) {
-                if (!canceled) {
-                    currentAnimator = null;
-                }
-            }
-        });
-        anim.start();
-        currentAnimator = anim;
-        setState(State.EXPANDED);
-    }
-
-    /**
-     * Set the presented sheet to be in a peeked state.
-     */
-    public void peekSheet() {
-        cancelCurrentAnimation();
-        setSheetLayerTypeIfEnabled(LAYER_TYPE_HARDWARE);
-        ObjectAnimator anim =
-                ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, getPeekSheetTranslation());
-        anim.setDuration(ANIMATION_DURATION);
-        anim.setInterpolator(animationInterpolator);
-        anim.addListener(new CancelDetectionAnimationListener() {
-            @Override
-            public void onAnimationEnd(@NonNull Animator animation) {
-                if (!canceled) {
-                    currentAnimator = null;
-                }
-            }
-        });
-        anim.start();
-        currentAnimator = anim;
-        setState(State.PEEKED);
-    }
-
-    /**
-     * @return The peeked state translation for the presented sheet view. Translation is counted
-     * from the bottom of the view.
-     */
-    public float getPeekSheetTranslation() {
-        return peek == 0 ? getDefaultPeekTranslation() : peek;
-    }
-
-    private float getDefaultPeekTranslation() {
-        return hasFullHeightSheet() ? getHeight() / 3 : getContentView().getHeight();
-    }
-
-    /**
-     * Set custom height for PEEKED state.
-     *
-     * @param peek Peek height in pixels
-     */
-    public void setPeekSheetTranslation(float peek) {
-        this.peek = peek;
-    }
-
     /**
      * @return The maximum translation for the presented sheet view. Translation is counted from
      * the bottom of the view.
      */
     public float getMaxSheetTranslation() {
-        return hasFullHeightSheet() ? getHeight() - getPaddingTop() : getContentView().getHeight();
+        return Math.min(getHeight() - getPaddingTop(), getContentView().getHeight());
     }
 
     /**
@@ -630,41 +528,39 @@ public class BottomSheetView extends FrameLayout {
                         // In the case of a large lag it could be that the view is dismissed
                         // before it is drawn resulting in sheet view being null here.
                         if (getContentView() != null) {
-                            peekSheet();
+                            peekSheet(contentView);
                         }
                     }
                 });
                 return true;
             }
         });
+        contentView.addOnLayoutChangeListener(onContentLayoutChangeListener);
+    }
 
-        onContentLayoutChangeListener = new OnLayoutChangeListener() {
+    /**
+     * Set the presented sheet to be in a peeked state.
+     */
+    private void peekSheet(final View contentView) {
+        cancelCurrentAnimation();
+
+        contentView.setLayerType(LAYER_TYPE_HARDWARE, null);
+        ObjectAnimator anim =
+                ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, getMaxSheetTranslation());
+        anim.setDuration(ANIMATION_DURATION);
+        anim.setInterpolator(animationInterpolator);
+        anim.addListener(new CancelDetectionAnimationListener() {
             @Override
-            public void onLayoutChange(
-                    View contentView,
-                    int left,
-                    int top,
-                    int right,
-                    int bottom,
-                    int oldLeft,
-                    int oldTop,
-                    int oldRight,
-                    int oldBottom) {
-                int oldHeight = oldBottom - oldTop;
-                int newHeight = bottom - top;
-                if (state != State.HIDDEN) {
-                    if (state == State.EXPANDED && newHeight < oldHeight) {
-                        // The sheet can no longer be in the expanded state if it has shrunk
-                        setState(State.PEEKED);
-                    }
-
-                    if (newHeight != oldHeight) {
-                        setSheetTranslation(newHeight);
-                    }
+            public void onAnimationEnd(@NonNull Animator animation) {
+                contentView.setLayerType(LAYER_TYPE_NONE, null);
+                if (!canceled) {
+                    currentAnimator = null;
                 }
             }
-        };
-        contentView.addOnLayoutChangeListener(onContentLayoutChangeListener);
+        });
+        anim.start();
+        currentAnimator = anim;
+        setState(State.PEEKED);
     }
 
     /**
@@ -681,22 +577,26 @@ public class BottomSheetView extends FrameLayout {
         }
         // This must be set every time, including if the parameter is null
         // Otherwise a new sheet might be shown when the caller called dismiss after a
-        // showWithSheet call, which would be
+        // showWithSheet call
         runAfterDismiss = runAfterDismissThis;
-        final View sheetView = getContentView();
-        sheetView.removeOnLayoutChangeListener(onContentLayoutChangeListener);
+
+        final View contentView = getContentView();
+        contentView.removeOnLayoutChangeListener(onContentLayoutChangeListener);
+        contentView.setLayerType(LAYER_TYPE_HARDWARE, null);
+
         cancelCurrentAnimation();
+
         ObjectAnimator anim = ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, 0);
         anim.setDuration(ANIMATION_DURATION);
         anim.setInterpolator(animationInterpolator);
         anim.addListener(new CancelDetectionAnimationListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
+                contentView.setLayerType(LAYER_TYPE_NONE, null);
                 if (!canceled) {
                     currentAnimator = null;
                     setState(State.HIDDEN);
-                    setSheetLayerTypeIfEnabled(LAYER_TYPE_NONE);
-                    removeView(sheetView);
+                    removeView(contentView);
 
                     if (onDismissedListener != null) {
                         onDismissedListener.onDismissed(BottomSheetView.this);
@@ -756,6 +656,33 @@ public class BottomSheetView extends FrameLayout {
             canceled = true;
         }
 
+    }
+
+    private class ContentLayoutChangeListener implements OnLayoutChangeListener {
+        @Override
+        public void onLayoutChange(
+                View contentView,
+                int left,
+                int top,
+                int right,
+                int bottom,
+                int oldLeft,
+                int oldTop,
+                int oldRight,
+                int oldBottom) {
+            int oldHeight = oldBottom - oldTop;
+            int newHeight = bottom - top;
+            if (state != State.HIDDEN) {
+                if (state == State.EXPANDED && newHeight < oldHeight) {
+                    // The sheet can no longer be in the expanded state if it has shrunk
+                    setState(State.PEEKED);
+                }
+
+                if (newHeight != oldHeight) {
+                    setSheetTranslation(newHeight);
+                }
+            }
+        }
     }
 
     public interface OnSheetStateChangeListener {
