@@ -48,9 +48,8 @@ public class BottomSheetView extends FrameLayout {
 
     public enum State {
         HIDDEN,
-        PREPARING,
         PEEKED,
-        EXPANDED;
+        EXPANDED
     }
 
     private Runnable runAfterDismiss;
@@ -571,7 +570,7 @@ public class BottomSheetView extends FrameLayout {
      * @param contentView The sheet content of your application.
      */
     public void setContentView(View contentView) {
-        setState(State.PREPARING);
+        setState(State.HIDDEN);
         while (getChildCount() > 1) removeViewAt(1);
         if (contentView == null) return;
 
@@ -642,7 +641,7 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private void show(final View contentView) {
-        if (state != State.PREPARING && state != State.HIDDEN) return;
+        if (state != State.HIDDEN) return;
 
         // Don't start animating until the sheet has been drawn once. This ensures that we don't
         // do layout while animating and that
