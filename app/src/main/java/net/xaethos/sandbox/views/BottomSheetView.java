@@ -10,11 +10,13 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Property;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -61,8 +63,8 @@ public class BottomSheetView extends FrameLayout {
     private VelocityTracker velocityTracker;
     private float minFlingVelocity;
     private float touchSlop;
-    private OnDismissedListener mOnDismissedListener;
     private Animator currentAnimator;
+    private OnDismissedListener onDismissedListener;
     private OnSheetStateChangeListener onSheetStateChangeListener;
     private OnLayoutChangeListener sheetViewOnLayoutChangeListener;
     private View dimView;
@@ -130,7 +132,9 @@ public class BottomSheetView extends FrameLayout {
         dimView.setBackgroundColor(Color.BLACK);
         dimView.setAlpha(0);
         dimView.setVisibility(INVISIBLE);
-        super.addView(dimView, 0, generateDefaultLayoutParams());
+        super.addView(dimView,
+                0,
+                new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
         peek = 0;//getHeight() return 0 at start!
 
@@ -144,16 +148,16 @@ public class BottomSheetView extends FrameLayout {
     }
 
     /**
-     * Don't call addView directly, use setSheetView()
+     * Don't call addView directly, use setContentView()
      */
     @Override
     public void addView(@NonNull View child) {
         if (getChildCount() > 0) {
             throw new IllegalArgumentException(
                     "You may not declare more then one child of bottom sheet. The sheet view must" +
-                            " be added dynamically with setSheetView()");
+                            " be added dynamically with setContentView()");
         }
-        setSheetView(child);
+        setContentView(child);
     }
 
     @Override
@@ -224,7 +228,7 @@ public class BottomSheetView extends FrameLayout {
         int bottomClip = (int) (getHeight() - Math.ceil(sheetTranslation));
 
         this.contentClipRect.set(0, 0, getWidth(), bottomClip);
-        getSheetView().setTranslationY(getHeight() - sheetTranslation);
+        getContentView().setTranslationY(getHeight() - sheetTranslation);
 
         float dimAlpha = getDimAlpha(sheetTranslation);
         dimView.setAlpha(dimAlpha);
@@ -287,7 +291,7 @@ public class BottomSheetView extends FrameLayout {
                     MotionEvent cancelEvent = MotionEvent.obtain(event);
                     cancelEvent.offsetLocation(0, sheetTranslation - getHeight());
                     cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                    getSheetView().dispatchTouchEvent(cancelEvent);
+                    getContentView().dispatchTouchEvent(cancelEvent);
                     cancelEvent.recycle();
                 }
 
@@ -307,7 +311,7 @@ public class BottomSheetView extends FrameLayout {
             // If we are scrolling down and the sheet cannot scroll further, go out of expanded
             // mode.
             boolean scrollingDown = deltaY < 0;
-            boolean canScrollUp = canScrollUp(getSheetView(),
+            boolean canScrollUp = canScrollUp(getContentView(),
                     event.getX(),
                     event.getY() + (sheetTranslation - getHeight()));
             if (state == State.EXPANDED && scrollingDown && !canScrollUp) {
@@ -324,7 +328,7 @@ public class BottomSheetView extends FrameLayout {
                 // cleaned up nicely.
                 MotionEvent cancelEvent = MotionEvent.obtain(event);
                 cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
-                getSheetView().dispatchTouchEvent(cancelEvent);
+                getContentView().dispatchTouchEvent(cancelEvent);
                 cancelEvent.recycle();
             }
 
@@ -337,7 +341,7 @@ public class BottomSheetView extends FrameLayout {
                 newSheetTranslation = Math.min(maxSheetTranslation, newSheetTranslation);
                 MotionEvent downEvent = MotionEvent.obtain(event);
                 downEvent.setAction(MotionEvent.ACTION_DOWN);
-                getSheetView().dispatchTouchEvent(downEvent);
+                getContentView().dispatchTouchEvent(downEvent);
                 downEvent.recycle();
                 setState(State.EXPANDED);
                 setSheetLayerTypeIfEnabled(LAYER_TYPE_NONE);
@@ -347,7 +351,7 @@ public class BottomSheetView extends FrameLayout {
                 // Dispatch the touch to the sheet if we are expanded so it can handle its own
                 // internal scrolling.
                 event.offsetLocation(0, sheetTranslation - getHeight());
-                getSheetView().dispatchTouchEvent(event);
+                getContentView().dispatchTouchEvent(event);
             } else {
                 // Make delta less effective when sheet is below the minimum translation.
                 // This makes it feel like scrolling in jello which gives the user an indication
@@ -406,7 +410,7 @@ public class BottomSheetView extends FrameLayout {
 
             event.offsetLocation(isTablet ? getX() - sheetStartX : 0,
                     sheetTranslation - getHeight());
-            getSheetView().dispatchTouchEvent(event);
+            getContentView().dispatchTouchEvent(event);
         }
         return true;
     }
@@ -445,7 +449,7 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private void setSheetLayerTypeIfEnabled(int layerType) {
-        getSheetView().setLayerType(layerType, null);
+        getContentView().setLayerType(layerType, null);
     }
 
     private void setState(State state) {
@@ -456,7 +460,7 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private boolean hasFullHeightSheet() {
-        return getSheetView() == null || getSheetView().getHeight() == getHeight();
+        return getContentView() == null || getContentView().getHeight() == getHeight();
     }
 
     /**
@@ -465,7 +469,7 @@ public class BottomSheetView extends FrameLayout {
     private void initializeSheetValues() {
         this.sheetTranslation = 0;
         this.contentClipRect.set(0, 0, getWidth(), getHeight());
-        getSheetView().setTranslationY(getHeight());
+        getContentView().setTranslationY(getHeight());
         dimView.setAlpha(0);
         dimView.setVisibility(INVISIBLE);
     }
@@ -524,7 +528,7 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private float getDefaultPeekTranslation() {
-        return hasFullHeightSheet() ? getHeight() / 3 : getSheetView().getHeight();
+        return hasFullHeightSheet() ? getHeight() / 3 : getContentView().getHeight();
     }
 
     /**
@@ -541,57 +545,24 @@ public class BottomSheetView extends FrameLayout {
      * the bottom of the view.
      */
     public float getMaxSheetTranslation() {
-        return hasFullHeightSheet() ? getHeight() - getPaddingTop() : getSheetView().getHeight();
+        return hasFullHeightSheet() ? getHeight() - getPaddingTop() : getContentView().getHeight();
     }
 
     /**
-     * @return The currently presented sheet view. If no sheet is currently presented null will
+     * @return The currently presented sheet content. If no sheet is currently presented null will
      * returned.
      */
-    public View getSheetView() {
+    public View getContentView() {
         return getChildCount() > 1 ? getChildAt(1) : null;
     }
 
     /**
      * Set the content of the bottom sheet.
      *
-     * @param sheetView The sheet content of your application.
+     * @param contentView The sheet content of your application.
      */
-    public void setSheetView(View sheetView) {
-        super.addView(sheetView, -1, generateDefaultLayoutParams());
-    }
-
-    /**
-     * Convenience for showWithSheetView(sheetView, null, null).
-     *
-     * @param sheetView The sheet to be presented.
-     */
-    public void showWithSheetView(View sheetView) {
-        showWithSheetView(sheetView, null);
-    }
-
-    /**
-     * Present a sheet view to the user.
-     * If another sheet is currently presented, it will be dismissed, and the new sheet will be
-     * shown after that
-     *
-     * @param sheetView           The sheet to be presented.
-     * @param onDismissedListener The listener to notify when the sheet is dismissed.
-     */
-    public void showWithSheetView(
-            final View sheetView, final OnDismissedListener onDismissedListener) {
-        if (state != State.HIDDEN) {
-            dismissSheet(new Runnable() {
-                @Override
-                public void run() {
-                    showWithSheetView(sheetView, onDismissedListener);
-                }
-            });
-            return;
-        }
-        setState(State.PREPARING);
-
-        LayoutParams params = (LayoutParams) sheetView.getLayoutParams();
+    public void setContentView(View contentView) {
+        LayoutParams params = (LayoutParams) contentView.getLayoutParams();
         if (params == null) {
             params = new LayoutParams(
                     isTablet ? LayoutParams.WRAP_CONTENT : LayoutParams.MATCH_PARENT,
@@ -614,9 +585,47 @@ public class BottomSheetView extends FrameLayout {
             sheetEndX = screenWidth - sheetStartX;
         }
 
-        super.addView(sheetView, -1, params);
+        super.addView(contentView, -1, params);
+    }
+
+    /**
+     * Present a sheet view to the user.
+     * If another sheet is currently presented, it will be dismissed, and the new sheet will be
+     * shown after that
+     *
+     * @param layoutRes Layout resource for the sheet content.
+     */
+    public void showWithContentView(@LayoutRes int layoutRes) {
+        showWithContentView(LayoutInflater.from(getContext()).inflate(layoutRes, this, false));
+    }
+
+    /**
+     * Present a sheet view to the user.
+     * If another sheet is currently presented, it will be dismissed, and the new sheet will be
+     * shown after that
+     *
+     * @param sheetView The sheet to be presented.
+     */
+    public void showWithContentView(final View sheetView) {
+        if (state != State.HIDDEN) {
+            dismissSheet(new Runnable() {
+                @Override
+                public void run() {
+                    showWithContentView(sheetView);
+                }
+            });
+            return;
+        }
+        setState(State.PREPARING);
+
+        setContentView(sheetView);
+        show(sheetView);
+    }
+
+    private void show(final View sheetView) {
+        if (state != State.PREPARING) return;
+
         initializeSheetValues();
-        this.mOnDismissedListener = onDismissedListener;
 
         // Don't start animating until the sheet has been drawn once. This ensures that we don't
         // do layout while animating and that
@@ -631,7 +640,7 @@ public class BottomSheetView extends FrameLayout {
                         // Make sure sheet view is still here when first draw happens.
                         // In the case of a large lag it could be that the view is dismissed
                         // before it is drawn resulting in sheet view being null here.
-                        if (getSheetView() != null) {
+                        if (getContentView() != null) {
                             peekSheet();
                         }
                     }
@@ -684,7 +693,7 @@ public class BottomSheetView extends FrameLayout {
         // Otherwise a new sheet might be shown when the caller called dismiss after a
         // showWithSheet call, which would be
         runAfterDismiss = runAfterDismissThis;
-        final View sheetView = getSheetView();
+        final View sheetView = getContentView();
         sheetView.removeOnLayoutChangeListener(sheetViewOnLayoutChangeListener);
         cancelCurrentAnimation();
         ObjectAnimator anim = ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, 0);
@@ -699,12 +708,11 @@ public class BottomSheetView extends FrameLayout {
                     setSheetLayerTypeIfEnabled(LAYER_TYPE_NONE);
                     removeView(sheetView);
 
-                    if (mOnDismissedListener != null) {
-                        mOnDismissedListener.onDismissed(BottomSheetView.this);
+                    if (onDismissedListener != null) {
+                        onDismissedListener.onDismissed(BottomSheetView.this);
                     }
 
                     // Remove sheet specific properties
-                    mOnDismissedListener = null;
                     if (runAfterDismiss != null) {
                         runAfterDismiss.run();
                         runAfterDismiss = null;
@@ -741,6 +749,10 @@ public class BottomSheetView extends FrameLayout {
     public void setOnSheetStateChangeListener(
             OnSheetStateChangeListener onSheetStateChangeListener) {
         this.onSheetStateChangeListener = onSheetStateChangeListener;
+    }
+
+    public void setOnDismissedListener(OnDismissedListener onDismissedListener) {
+        this.onDismissedListener = onDismissedListener;
     }
 
     /**

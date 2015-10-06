@@ -2,7 +2,6 @@ package net.xaethos.sandbox;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -22,19 +21,17 @@ public class BottomSheetActivity extends FragmentActivity implements View.OnClic
 
         setContentView(R.layout.activity_bottom_sheet_2);
 
-        final BottomSheetView bottomSheetLayout = (BottomSheetView) findViewById(R.id.bottomsheet);
-        final View bottomSheetContent =
-                LayoutInflater.from(this).inflate(R.layout.bottom_sheet, bottomSheetLayout, false);
+        final BottomSheetView bottomSheetView = (BottomSheetView) findViewById(R.id.bottomsheet);
+        bottomSheetView.setOnDismissedListener(new BottomSheetView.OnDismissedListener() {
+            @Override
+            public void onDismissed(BottomSheetView bottomSheetView) {
+                finish();
+            }
+        });
+        bottomSheetView.showWithContentView(R.layout.bottom_sheet);
 
-        bottomSheetLayout.showWithSheetView(bottomSheetContent,
-                new BottomSheetView.OnDismissedListener() {
-                    @Override
-                    public void onDismissed(BottomSheetView bottomSheetView) {
-                        finish();
-                    }
-                });
-
-        mLipsumContainer = (ViewGroup) findViewById(R.id.container_lipsum);
+        mLipsumContainer =
+                (ViewGroup) bottomSheetView.getContentView().findViewById(R.id.container_lipsum);
 
         findViewById(android.R.id.button1).setOnClickListener(this);
         findViewById(android.R.id.button2).setOnClickListener(this);
