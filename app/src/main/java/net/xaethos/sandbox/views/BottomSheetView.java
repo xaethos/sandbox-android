@@ -104,7 +104,7 @@ public class BottomSheetView extends FrameLayout {
 
     public BottomSheetView(Context context) {
         super(context);
-        init();
+        initialize();
     }
 
     public BottomSheetView(Context context, AttributeSet attrs) {
@@ -113,17 +113,17 @@ public class BottomSheetView extends FrameLayout {
 
     public BottomSheetView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        initialize();
     }
 
     @SuppressWarnings("unused")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public BottomSheetView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init();
+        initialize();
     }
 
-    private void init() {
+    private void initialize() {
         ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
         minFlingVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
         touchSlop = viewConfiguration.getScaledTouchSlop();
@@ -148,14 +148,32 @@ public class BottomSheetView extends FrameLayout {
     }
 
     /**
+     * Set dim and translation to the initial state
+     */
+    private void initializeSheet(final View contentView) {
+        this.sheetTranslation = 0;
+        this.contentClipRect.set(0, 0, getWidth(), getHeight());
+        contentView.setTranslationY(getHeight());
+        dimView.setAlpha(0);
+        dimView.setVisibility(INVISIBLE);
+        setState(State.HIDDEN);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        if (getChildCount() > 1) initializeSheet(getContentView());
+    }
+
+    /**
      * Don't call addView directly, use setContentView()
      */
     @Override
     public void addView(@NonNull View child) {
-        if (getChildCount() > 0) {
+        if (getChildCount() > 1) {
             throw new IllegalArgumentException(
-                    "You may not declare more then one child of bottom sheet. The sheet view must" +
-                            " be added dynamically with setContentView()");
+                    "You may not add more then one child of bottom sheet. The sheet view must" +
+                            " be set with setContentView()");
         }
         setContentView(child);
     }
@@ -453,6 +471,8 @@ public class BottomSheetView extends FrameLayout {
     }
 
     private void setState(State state) {
+        if (this.state == state) return;
+
         this.state = state;
         if (onSheetStateChangeListener != null) {
             onSheetStateChangeListener.onSheetStateChanged(state);
@@ -461,17 +481,6 @@ public class BottomSheetView extends FrameLayout {
 
     private boolean hasFullHeightSheet() {
         return getContentView() == null || getContentView().getHeight() == getHeight();
-    }
-
-    /**
-     * Set dim and translation to the initial state
-     */
-    private void initializeSheetValues() {
-        this.sheetTranslation = 0;
-        this.contentClipRect.set(0, 0, getWidth(), getHeight());
-        getContentView().setTranslationY(getHeight());
-        dimView.setAlpha(0);
-        dimView.setVisibility(INVISIBLE);
     }
 
     /**
@@ -562,6 +571,10 @@ public class BottomSheetView extends FrameLayout {
      * @param contentView The sheet content of your application.
      */
     public void setContentView(View contentView) {
+        setState(State.PREPARING);
+        while (getChildCount() > 1) removeViewAt(1);
+        if (contentView == null) return;
+
         LayoutParams params = (LayoutParams) contentView.getLayoutParams();
         if (params == null) {
             params = new LayoutParams(
@@ -586,6 +599,7 @@ public class BottomSheetView extends FrameLayout {
         }
 
         super.addView(contentView, -1, params);
+        initializeSheet(contentView);
     }
 
     /**
@@ -616,16 +630,19 @@ public class BottomSheetView extends FrameLayout {
             });
             return;
         }
-        setState(State.PREPARING);
 
         setContentView(sheetView);
         show(sheetView);
     }
 
-    private void show(final View sheetView) {
-        if (state != State.PREPARING) return;
+    public void show() {
+        final View contentView = getContentView();
+        if (contentView == null) throw new IllegalStateException("show() called, but no content");
+        show(contentView);
+    }
 
-        initializeSheetValues();
+    private void show(final View contentView) {
+        if (state != State.PREPARING && state != State.HIDDEN) return;
 
         // Don't start animating until the sheet has been drawn once. This ensures that we don't
         // do layout while animating and that
@@ -649,8 +666,8 @@ public class BottomSheetView extends FrameLayout {
             }
         });
 
-        // sheetView should always be anchored to the bottom of the screen
-        currentSheetViewHeight = sheetView.getMeasuredHeight();
+        // contentView should always be anchored to the bottom of the screen
+        currentSheetViewHeight = contentView.getMeasuredHeight();
         sheetViewOnLayoutChangeListener = new OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(
@@ -674,7 +691,7 @@ public class BottomSheetView extends FrameLayout {
                 currentSheetViewHeight = newSheetViewHeight;
             }
         };
-        sheetView.addOnLayoutChangeListener(sheetViewOnLayoutChangeListener);
+        contentView.addOnLayoutChangeListener(sheetViewOnLayoutChangeListener);
     }
 
     /**

@@ -28,7 +28,7 @@ public class BottomSheetActivity extends FragmentActivity implements View.OnClic
                 finish();
             }
         });
-        bottomSheetView.showWithContentView(R.layout.bottom_sheet);
+        bottomSheetView.show();
 
         mLipsumContainer =
                 (ViewGroup) bottomSheetView.getContentView().findViewById(R.id.container_lipsum);
