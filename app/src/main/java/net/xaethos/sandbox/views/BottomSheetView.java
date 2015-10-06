@@ -679,7 +679,7 @@ public class BottomSheetView extends FrameLayout {
                 }
 
                 if (newHeight != oldHeight) {
-                    setSheetTranslation(newHeight);
+                    peekSheet(contentView);
                 }
             }
         }
