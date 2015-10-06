@@ -186,7 +186,8 @@ public class BottomSheetView extends FrameLayout {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        velocityTracker.clear();
+        velocityTracker.recycle();
+        velocityTracker = null;
         cancelCurrentAnimation();
     }
 
