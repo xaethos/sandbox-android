@@ -2,7 +2,9 @@
     <string name="app_name">Xae\'s Sandbox</string>
 
     <string name="hello_world">Hello world!</string>
+
     <string name="action_settings">Settings</string>
+    <string name="action_bottom_sheet">Show Bottom Sheet</string>
 
     <string name="sandbox_loader_adapter">LoaderAdapter</string>
     <string name="sandbox_expand_text">Expandable TextView</string>
@@ -10,6 +12,7 @@
     <string name="sandbox_rx_location">Rx Location</string>
     <string name="sandbox_rx_errors">Rx Error Handling</string>
     <string name="sandbox_pretty_form">Pretty Form</string>
+    <string name="sandbox_bottom_sheet">Bottom Sheet</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>

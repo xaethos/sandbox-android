@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity
         case R.id.nav_complex_layout:
             startActivity(new Intent(this, ComplexLayoutActivity.class));
             return true;
+        case R.id.action_bottom_sheet:
+            startActivity(new Intent(this, BottomSheetActivity.class));
+            return true;
         }
         return false;
     }
