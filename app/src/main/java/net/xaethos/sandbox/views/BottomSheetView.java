@@ -41,36 +41,17 @@ public class BottomSheetView extends FrameLayout {
                     object.setSheetTranslation(value);
                 }
             };
-    private Runnable runAfterDismiss;
 
-    /**
-     * Utility class which registers if the animation has been canceled so that subclasses may
-     * respond differently in onAnimationEnd
-     */
-    private class CancelDetectionAnimationListener extends AnimatorListenerAdapter {
-
-        protected boolean canceled;
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-            canceled = true;
-        }
-
-    }
+    private static final long ANIMATION_DURATION = 300;
 
     public enum State {
         HIDDEN,
         PREPARING,
         PEEKED,
-        EXPANDED
+        EXPANDED;
     }
 
-    public interface OnSheetStateChangeListener {
-        void onSheetStateChanged(State state);
-    }
-
-    private static final long ANIMATION_DURATION = 300;
-
+    private Runnable runAfterDismiss;
     private Rect contentClipRect = new Rect();
     private State state = State.HIDDEN;
     private TimeInterpolator animationInterpolator = new DecelerateInterpolator(1.6f);
@@ -100,14 +81,14 @@ public class BottomSheetView extends FrameLayout {
     private int sheetEndX = 0;
 
     /**
-     * Snapshot of the touch's y position on a down event
-     */
-    private float downY;
-
-    /**
      * Snapshot of the touch's x position on a down event
      */
     private float downX;
+
+    /**
+     * Snapshot of the touch's y position on a down event
+     */
+    private float downY;
 
     /**
      * Snapshot of the sheet's translation at the time of the last down event
@@ -149,6 +130,7 @@ public class BottomSheetView extends FrameLayout {
         dimView.setBackgroundColor(Color.BLACK);
         dimView.setAlpha(0);
         dimView.setVisibility(INVISIBLE);
+        super.addView(dimView, 0, generateDefaultLayoutParams());
 
         peek = 0;//getHeight() return 0 at start!
 
@@ -162,16 +144,16 @@ public class BottomSheetView extends FrameLayout {
     }
 
     /**
-     * Don't call addView directly, use setContentView() and showWithSheetView()
+     * Don't call addView directly, use setSheetView()
      */
     @Override
     public void addView(@NonNull View child) {
         if (getChildCount() > 0) {
             throw new IllegalArgumentException(
                     "You may not declare more then one child of bottom sheet. The sheet view must" +
-                            " be added dynamically with showWithSheetView()");
+                            " be added dynamically with setSheetView()");
         }
-        setContentView(child);
+        setSheetView(child);
     }
 
     @Override
@@ -251,7 +233,7 @@ public class BottomSheetView extends FrameLayout {
 
     private float getDimAlpha(float sheetTranslation) {
         float progress = sheetTranslation / getMaxSheetTranslation();
-        return progress * 0.7f;
+        return progress * 0.8f;
     }
 
     public boolean onInterceptTouchEvent(@NonNull MotionEvent ev) {
@@ -566,27 +548,17 @@ public class BottomSheetView extends FrameLayout {
      * @return The currently presented sheet view. If no sheet is currently presented null will
      * returned.
      */
-    public View getContentView() {
-        return getChildCount() > 0 ? getChildAt(0) : null;
-    }
-
-    /**
-     * @return The currently presented sheet view. If no sheet is currently presented null will
-     * returned.
-     */
     public View getSheetView() {
-        return getChildCount() > 2 ? getChildAt(2) : null;
+        return getChildCount() > 1 ? getChildAt(1) : null;
     }
 
     /**
-     * Set the content view of the bottom sheet. This is the view which is shown under the sheet
-     * being presented. This is usually the root view of your application.
+     * Set the content of the bottom sheet.
      *
-     * @param contentView The content view of your application.
+     * @param sheetView The sheet content of your application.
      */
-    public void setContentView(View contentView) {
-        super.addView(contentView, -1, generateDefaultLayoutParams());
-        super.addView(dimView, -1, generateDefaultLayoutParams());
+    public void setSheetView(View sheetView) {
+        super.addView(sheetView, -1, generateDefaultLayoutParams());
     }
 
     /**
@@ -603,19 +575,18 @@ public class BottomSheetView extends FrameLayout {
      * If another sheet is currently presented, it will be dismissed, and the new sheet will be
      * shown after that
      *
-     * @param sheetView                The sheet to be presented.
+     * @param sheetView           The sheet to be presented.
      * @param onDismissedListener The listener to notify when the sheet is dismissed.
      */
     public void showWithSheetView(
             final View sheetView, final OnDismissedListener onDismissedListener) {
         if (state != State.HIDDEN) {
-            Runnable runAfterDismissThis = new Runnable() {
+            dismissSheet(new Runnable() {
                 @Override
                 public void run() {
                     showWithSheetView(sheetView, onDismissedListener);
                 }
-            };
-            dismissSheet(runAfterDismissThis);
+            });
             return;
         }
         setState(State.PREPARING);
@@ -780,6 +751,25 @@ public class BottomSheetView extends FrameLayout {
      */
     public static boolean isTablet(Context context) {
         return context.getResources().getBoolean(R.bool.bottomsheet_is_tablet);
+    }
+
+    /**
+     * Utility class which registers if the animation has been canceled so that subclasses may
+     * respond differently in onAnimationEnd
+     */
+    private class CancelDetectionAnimationListener extends AnimatorListenerAdapter {
+
+        protected boolean canceled;
+
+        @Override
+        public void onAnimationCancel(Animator animation) {
+            canceled = true;
+        }
+
+    }
+
+    public interface OnSheetStateChangeListener {
+        void onSheetStateChanged(State state);
     }
 
     public interface OnDismissedListener {
