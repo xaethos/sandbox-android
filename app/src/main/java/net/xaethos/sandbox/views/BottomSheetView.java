@@ -52,24 +52,26 @@ public class BottomSheetView extends FrameLayout {
         EXPANDED
     }
 
-    private Runnable runAfterDismiss;
-    private Rect contentClipRect = new Rect();
     private State state = State.HIDDEN;
+    private float peek;
+    private int currentSheetViewHeight;
+
+    private Animator currentAnimator;
     private TimeInterpolator animationInterpolator = new DecelerateInterpolator(1.6f);
+    private Runnable runAfterDismiss;
+
+    private OnDismissedListener onDismissedListener;
+    private OnSheetStateChangeListener onSheetStateChangeListener;
+    private OnLayoutChangeListener onContentLayoutChangeListener;
+
+    private Rect contentClipRect = new Rect();
     public boolean bottomSheetOwnsTouch;
     private boolean sheetViewOwnsTouch;
     private float sheetTranslation;
     private VelocityTracker velocityTracker;
     private float minFlingVelocity;
     private float touchSlop;
-    private Animator currentAnimator;
-    private OnDismissedListener onDismissedListener;
-    private OnSheetStateChangeListener onSheetStateChangeListener;
-    private OnLayoutChangeListener sheetViewOnLayoutChangeListener;
-    private View dimView;
-    private int currentSheetViewHeight;
     private boolean hasIntercepted;
-    private float peek;
 
     /**
      * Some values we need to manage width on tablets
@@ -127,7 +129,7 @@ public class BottomSheetView extends FrameLayout {
         minFlingVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
         touchSlop = viewConfiguration.getScaledTouchSlop();
 
-        dimView = new View(getContext());
+        View dimView = new View(getContext());
         dimView.setBackgroundColor(Color.BLACK);
         dimView.setAlpha(0);
         dimView.setVisibility(INVISIBLE);
@@ -153,8 +155,7 @@ public class BottomSheetView extends FrameLayout {
         this.sheetTranslation = 0;
         this.contentClipRect.set(0, 0, getWidth(), getHeight());
         contentView.setTranslationY(getHeight());
-        dimView.setAlpha(0);
-        dimView.setVisibility(INVISIBLE);
+        setDimAlpha(0);
         setState(State.HIDDEN);
     }
 
@@ -247,14 +248,18 @@ public class BottomSheetView extends FrameLayout {
         this.contentClipRect.set(0, 0, getWidth(), bottomClip);
         getContentView().setTranslationY(getHeight() - sheetTranslation);
 
-        float dimAlpha = getDimAlpha(sheetTranslation);
-        dimView.setAlpha(dimAlpha);
-        dimView.setVisibility(dimAlpha > 0 ? VISIBLE : INVISIBLE);
+        setDimAlpha(getDimAlphaFromTranslation(sheetTranslation));
     }
 
-    private float getDimAlpha(float sheetTranslation) {
+    private float getDimAlphaFromTranslation(float sheetTranslation) {
         float progress = sheetTranslation / getMaxSheetTranslation();
         return progress * 0.8f;
+    }
+
+    private void setDimAlpha(float dimAlpha) {
+        final View dimView = getChildAt(0);
+        dimView.setAlpha(dimAlpha);
+        dimView.setVisibility(dimAlpha > 0 ? VISIBLE : INVISIBLE);
     }
 
     public boolean onInterceptTouchEvent(@NonNull MotionEvent ev) {
@@ -667,7 +672,7 @@ public class BottomSheetView extends FrameLayout {
 
         // contentView should always be anchored to the bottom of the screen
         currentSheetViewHeight = contentView.getMeasuredHeight();
-        sheetViewOnLayoutChangeListener = new OnLayoutChangeListener() {
+        onContentLayoutChangeListener = new OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(
                     View sheetView,
@@ -690,7 +695,7 @@ public class BottomSheetView extends FrameLayout {
                 currentSheetViewHeight = newSheetViewHeight;
             }
         };
-        contentView.addOnLayoutChangeListener(sheetViewOnLayoutChangeListener);
+        contentView.addOnLayoutChangeListener(onContentLayoutChangeListener);
     }
 
     /**
@@ -710,7 +715,7 @@ public class BottomSheetView extends FrameLayout {
         // showWithSheet call, which would be
         runAfterDismiss = runAfterDismissThis;
         final View sheetView = getContentView();
-        sheetView.removeOnLayoutChangeListener(sheetViewOnLayoutChangeListener);
+        sheetView.removeOnLayoutChangeListener(onContentLayoutChangeListener);
         cancelCurrentAnimation();
         ObjectAnimator anim = ObjectAnimator.ofFloat(this, SHEET_TRANSLATION, 0);
         anim.setDuration(ANIMATION_DURATION);
