@@ -375,8 +375,12 @@ public class BottomSheetView extends FrameLayout {
         } else {
             final int x = (int) event.getX();
             final int y = (int) event.getY();
-            final Rect contentRect = new Rect();
-            contentView.getHitRect(contentRect);
+
+            final int sheetTranslation = (int) contentView.getTranslationY();
+            final Rect contentRect = new Rect(contentView.getLeft(),
+                    contentView.getTop() + sheetTranslation,
+                    contentView.getRight(),
+                    contentView.getBottom() + sheetTranslation);
 
             // Dismiss if tap is outside of the bottom sheet content.
             if (event.getAction() == MotionEvent.ACTION_UP && !contentRect.contains(x, y)) {
