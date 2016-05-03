@@ -1,0 +1,18 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+#    repository: wasabeef/android
+#    repository: dockerbase/android
+#    repository: jacekmarchwicki/android
+    repository: java
+#    tag: alpine
+    tag: 8-jdk
+
+inputs:
+- name: sandbox-android
+
+run:
+  path: ./sandbox-android/ci/test.sh
+#  path: ls
+#  args: ["-l","sandbox-android"]
