@@ -9,5 +9,6 @@ jobs:
 - name: unit-test
   plan:
   - get: sandbox-android
+    trigger: true
   - task: test
     file: sandbox-android/ci/task.yml
