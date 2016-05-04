@@ -1,4 +1,5 @@
 platform: linux
+
 image_resource:
   type: docker-image
   source:
@@ -8,6 +9,10 @@ inputs:
 - name: sandbox-android
 
 run:
-  path: ./sandbox-android/ci/test.sh
-#  path: ls
-#  args: ["-l","sandbox-android"]
+  dir: sandbox-android
+  path: ./gradlew
+  args:
+    - test
+
+params:
+  TERM: dumb
