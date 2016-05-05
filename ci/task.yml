@@ -3,7 +3,7 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: yarbelk/androider
+    repository: xaethos/android-23
 
 inputs:
 - name: sandbox-android
@@ -12,7 +12,7 @@ run:
   dir: sandbox-android
   path: ./gradlew
   args:
-    - test
+  - test
 
 params:
   TERM: dumb
