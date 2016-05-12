@@ -11,4 +11,4 @@ jobs:
   - get: sandbox-android
     trigger: true
   - task: test
-    file: sandbox-android/ci/task.yml
+    file: sandbox-android/ci/unit-test.yml
