@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<net.xaethos.sandbox.gestures.ColumnView android:id="@+id/column"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="150dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:clickable="false"
+    android:longClickable="false"
+    android:padding="4dp">
+
+    <View
+        android:id="@+id/box_top"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:background="@color/colorPrimaryDark" />
+
+    <View
+        android:id="@+id/box_center"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:background="@color/colorPrimary" />
+
+    <View
+        android:id="@+id/box_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/colorAccent" />
+
+</net.xaethos.sandbox.gestures.ColumnView>
