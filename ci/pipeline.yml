@@ -1,0 +1,14 @@
+resources:
+- name: sandbox-android
+  type: git
+  source:
+    uri: https://github.com/xaethos/sandbox-android.git
+    branch: concourse
+
+jobs:
+- name: unit-test
+  plan:
+  - get: sandbox-android
+    trigger: true
+  - task: test
+    file: sandbox-android/ci/unit-test.yml
