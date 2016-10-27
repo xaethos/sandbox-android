@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-//apply plugin: 'com.google.protobuf'
 
 android {
     compileSdkVersion 23
@@ -28,11 +27,7 @@ android {
         exclude 'LICENSE.txt'
     }
 
-    //protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
-
     dependencies {
-        //compile project(':models')
-
         compile "com.android.support:support-v4:$ver.androidSupport"
         compile "com.android.support:appcompat-v7:$ver.androidSupport"
         compile "com.android.support:recyclerview-v7:$ver.androidSupport"
@@ -40,10 +35,6 @@ android {
         compile "com.android.support:design:$ver.androidSupport"
 
         compile "com.google.android.gms:play-services-location:$ver.gmsCore"
-
-        //compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
-        //compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-2'
-        compile 'com.google.protobuf:protobuf-java:2.6.1'
 
         compile 'io.reactivex:rxjava:1.0.10'
         compile 'io.reactivex:rxandroid:1.0.1'
