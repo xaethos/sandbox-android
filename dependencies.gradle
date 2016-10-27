@@ -1,0 +1,33 @@
+def kotlinDep = { module -> "org.jetbrains.kotlin:kotlin-$module:1.0.2-1" }
+def androidSupportDep = { module -> "com.android.support:$module:23.4.0" }
+def gmsCoreDep = { module -> "com.google.android.gms:play-services-$module:7.5.0" }
+
+ext {
+    dep = [
+            junit: 'junit:junit:4.12',
+    ]
+
+    dep.kotlin = [
+            stdlib: kotlinDep('stdlib'),
+            plugin: kotlinDep('gradle-plugin'),
+    ]
+
+    dep.android = [
+            support     : androidSupportDep('support-v4'),
+            appcompat   : androidSupportDep('appcompat-v7'),
+            recyclerview: androidSupportDep('recyclerview-v7'),
+            cardview    : androidSupportDep('cardview-v7'),
+            design      : androidSupportDep('design'),
+    ]
+
+    dep.gmsCore = [
+            location: gmsCoreDep('location')
+    ]
+
+    dep.rx = [
+            android: [
+                    'io.reactivex:rxjava:1.0.10',
+                    'io.reactivex:rxandroid:1.0.1',
+            ]
+    ]
+}

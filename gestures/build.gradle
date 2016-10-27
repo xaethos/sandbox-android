@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.3"
 
     defaultConfig {
         applicationId "net.xaethos.sandbox.gestures"
         minSdkVersion 9
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
     }
@@ -18,26 +18,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
 }
 
 dependencies {
-    // Kotlin
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$ver.kotlin"
+    compile dep.kotlin.stdlib
 
-    // Support
-    compile "com.android.support:appcompat-v7:$ver.androidSupport"
-    compile "com.android.support:recyclerview-v7:$ver.androidSupport"
-    compile "com.android.support:design:$ver.androidSupport"
+    compile dep.android.appcompat
+    compile dep.android.recyclerview
+    compile dep.android.design
 
-    // RxJava
-    compile 'io.reactivex:rxjava:1.0.10'
-    compile 'io.reactivex:rxandroid:1.0.1'
+    compile dep.rx.android
 
-    testCompile 'junit:junit:4.12'
-}
-repositories {
-    mavenCentral()
+    testCompile dep.junit
 }

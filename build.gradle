@@ -1,18 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.ver = [
-            kotlin: '1.0.2-1',
-            androidSupport: '23.4.0',
-            gmsCore: '7.5.0',
-    ]
+    apply from: 'dependencies.gradle'
 
     repositories {
         jcenter()
     }
+
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$ver.kotlin"
+        classpath 'com.android.tools.build:gradle:2.2.2'
+        classpath dep.kotlin.plugin
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
